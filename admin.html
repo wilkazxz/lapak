@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#16286a">
+<title>Admin — Lapak.id</title>
+<link rel="icon" href="icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--g:#2b5bea;--gd:#16286a;--ink:#0f172a;--mut:#64748b;--ln:#e3e8f4;--bg:#f2f5fc}
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+body{font:14px/1.5 'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+a{color:var(--g)}button,input,select,textarea{font:inherit}
+.ic{flex:none;vertical-align:-3px}
+header{background:linear-gradient(120deg,var(--g),var(--gd));color:#fff;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));display:flex;align-items:center;gap:10px;border-radius:0 0 22px 22px;box-shadow:0 8px 24px #16286a33}
+header img{width:34px;height:34px;border-radius:10px;background:#fff}header b{flex:1;font-size:16px}
+.w{max-width:1100px;margin:auto;padding:16px}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--ln);border-radius:12px;background:#fff}
+input:focus-visible,button:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:12px;padding:9px 14px;font-weight:700;cursor:pointer;background:var(--g);color:#fff}
+.btn.o{background:#fff;color:var(--ink);border:1px solid var(--ln)}.btn.r{background:#e11d48}.btn.s{padding:5px 10px;font-size:12px;border-radius:10px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.chip{display:inline-flex;align-items:center;gap:6px;flex:none;border:1px solid var(--ln);background:#fff;border-radius:99px;padding:8px 15px;cursor:pointer;font-weight:600}.chip.on{background:var(--g);color:#fff;border-color:var(--g)}
+.box{background:#fff;border:1px solid var(--ln);border-radius:18px;padding:14px;margin:8px 0}
+#main{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px}
+#main .box{margin:0}#main>.st,#main>.fm,#main>.none{grid-column:1/-1}
+.st{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.mt{font-size:12px;color:var(--mut)}.r1{display:flex;gap:10px;align-items:center}.r1>div{flex:1;min-width:0}.r1 img{width:52px;height:52px;border-radius:12px;object-fit:cover}
+.bt{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag{display:inline-block;background:#e8efff;color:var(--gd);font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px}.tag.x{background:#ffe4e6;color:#9f1239}
+.fm{display:grid;gap:8px;max-width:380px;margin:60px auto}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:14px;opacity:0;pointer-events:none;transition:.25s}#toast.on{opacity:1}
+</style>
+<script>const FALL='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#2b5bea"/><g fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 22h26l2 24a3 3 0 0 1-3 3H20a3 3 0 0 1-3-3z"/><path d="M25 22v-2a7 7 0 0 1 14 0v2"/></g></svg>');addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&!t.dataset.f){t.dataset.f=1;t.src=FALL}},true)</script>
+</head>
+<body>
+<header><img src="icon.png" alt=""><b>Lapak.id Admin</b><span id="who" class="mt" style="color:#dbe6ff"></span><button class="btn o s" id="out" hidden onclick="logout()">Keluar</button></header>
+<div class="w" id="root"></div><div id="toast" role="status"></div>
+
+<script type="module">
+/* ===== DATA: config Firebase ada di data.js (satu sumber untuk index.html & admin.html) ===== */
+
+/* ===== LAPISAN DATA (blok ini identik di index.html dan admin.html) =====
+   Tahap sekarang: Firebase BELUM terhubung -> MODE DEMO (localStorage, hanya untuk uji coba).
+   Nanti: isi objek FB dengan config project Firebase. Mode demo mati otomatis,
+   sisa kode tidak perlu diubah (API demo meniru Firebase v10 modular). */
+const FB={apiKey:"ISI_API_KEY",authDomain:"PROJECT.firebaseapp.com",projectId:"PROJECT",storageBucket:"PROJECT.appspot.com",messagingSenderId:"ISI",appId:"ISI"};
+const LOCAL=FB.apiKey==="ISI_API_KEY";
+
+const GS="https://www.gstatic.com/firebasejs/10.12.2/firebase-";
+const M=LOCAL?localFB():Object.assign({},...await Promise.all(["app","auth","firestore"].map(n=>import(GS+n+".js"))));
+
+if(LOCAL)document.body.insertAdjacentHTML('afterbegin','<div style="background:#16286a;color:#fde68a;font:12px system-ui;text-align:center;padding:5px 10px">MODE DEMO: data hanya di browser ini, belum tersimpan ke Firebase.</div>');
+/* ===== MODE DEMO: pengganti Firebase saat config belum diisi (hanya untuk pengujian) ===== */
+function localFB(){
+  class TS{constructor(m){this.m=m}toMillis(){return this.m}toJSON(){return{__t:this.m}}}
+  const rev=v=>{if(Array.isArray(v))return v.map(rev);if(v&&typeof v==='object'){if(Object.keys(v).length===1&&'__t'in v)return new TS(v.__t);const o={};for(const k in v)o[k]=rev(v[k]);return o}return v};
+  const cl=v=>rev(JSON.parse(JSON.stringify(v)));
+  let S={},AC={u:{},cur:null},cu=null,LS=null;
+  try{LS=window.localStorage;const x=JSON.parse(LS.getItem('lapak_db')||'null');if(x){S=rev(x.S);AC=x.AC;cu=AC.cur}}catch{}
+  const save=()=>{try{LS&&LS.setItem('lapak_db',JSON.stringify({S,AC}))}catch{}};
+  const col=c=>S[c]||(S[c]={}),LI=[],AL=[];
+  const fire=c=>{save();LI.filter(l=>l.c===c).forEach(l=>setTimeout(l.f,0))};
+  const val=v=>v instanceof TS?v.m:v;
+  const getp=(o,k)=>k.split('.').reduce((a,b)=>a?.[b],o);
+  const setp=(o,k,v)=>{const p=k.split('.');let t=o;while(p.length>1){const q=p.shift();t=t[q]=t[q]&&typeof t[q]==='object'?t[q]:{}}t[p[0]]=v};
+  const apply=(o,d)=>{for(const k in d){let v=d[k];const cur=getp(o,k);
+    if(v&&v.__inc!=null)v=(cur||0)+v.__inc;else if(v&&v.__au)v=[...new Set([...(cur||[]),...v.__au])];else if(v&&v.__st)v=new TS(Date.now());
+    setp(o,k,v)}return o};
+  const snap=(c,id)=>{const d=col(c)[id];return{id,exists:()=>!!d,data:()=>d?cl(d):undefined}};
+  const run=q=>{let a=Object.entries(col(q.c));
+    for(const[f,op,v]of q.w)a=a.filter(([,d])=>{const x=getp(d,f);return op==='=='?x===v:op==='array-contains'?(x||[]).includes(v):false});
+    if(q.o){const[f,dir]=q.o;a.sort((x,y)=>{const p=val(getp(x[1],f)),r=val(getp(y[1],f));return(p>r?1:p<r?-1:0)*(dir==='desc'?-1:1)})}
+    if(q.n)a=a.slice(0,q.n);const docs=a.map(([id])=>snap(q.c,id));return{docs,size:docs.length,forEach:f=>docs.forEach(f)}};
+  const doc=(db,...p)=>{const id=p.pop();return{c:p.join('/'),id}};
+  const collection=(db,...p)=>({c:p.join('/'),w:[],o:null,n:0});
+  const query=(r,...cs)=>{const q={...r,w:[...r.w]};cs.forEach(x=>x.t==='w'?q.w.push(x.a):x.t==='o'?q.o=x.a:q.n=x.a);return q};
+  const getDoc=async r=>snap(r.c,r.id),getDocs=async q=>run(q);
+  const setDoc=async(r,d,o)=>{col(r.c)[r.id]=apply(o&&o.merge?(col(r.c)[r.id]||{}):{},cl(d));fire(r.c)};
+  const addDoc=async(r,d)=>{const id='L'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);await setDoc({c:r.c,id},d);return{id}};
+  const updateDoc=async(r,d)=>{if(!col(r.c)[r.id])throw Object.assign(Error('not-found'),{code:'not-found'});apply(col(r.c)[r.id],cl(d));fire(r.c)};
+  const deleteDoc=async r=>{delete col(r.c)[r.id];fire(r.c)};
+  const runTransaction=async(db,f)=>f({get:getDoc,set:(r,d)=>setDoc(r,d),update:(r,d)=>updateDoc(r,d),delete:r=>deleteDoc(r)});
+  const onSnapshot=(r,f)=>{const g=()=>f(r.id?snap(r.c,r.id):run(r)),l={c:r.c,f:g};LI.push(l);setTimeout(g,0);return()=>{const i=LI.indexOf(l);if(i>=0)LI.splice(i,1)}};
+  const getCountFromServer=async q=>({data:()=>({count:run(q).size})});
+  const where=(...a)=>({t:'w',a}),orderBy=(f,d='asc')=>({t:'o',a:[f,d]}),limit=n=>({t:'l',a:n});
+  const increment=n=>({__inc:n}),arrayUnion=(...a)=>({__au:a}),serverTimestamp=()=>({__st:1}),Timestamp={fromMillis:m=>new TS(m)};
+  /* auth lokal (hanya simulasi, kata sandi tidak aman, jangan dipakai di produksi) */
+  const err=c=>Object.assign(Error(c),{code:c}),rid=()=>Math.random().toString(36).slice(2,10);
+  const mk=(uid,email,name,an)=>({uid,email,displayName:name,isAnonymous:an});
+  const setU=u=>{cu=u;AC.cur=u;save();AL.forEach(f=>f(cu))};
+  const onAuthStateChanged=(a,f)=>{AL.push(f);setTimeout(()=>f(cu),0);return()=>{}};
+  const signInAnonymously=async()=>setU(mk('anon-'+rid(),null,null,true));
+  const createUserWithEmailAndPassword=async(a,e,p)=>{e=e.toLowerCase();if(AC.u[e])throw err('auth/email-already-in-use');if(p.length<6)throw err('auth/weak-password');
+    const u=mk('u-'+rid(),e,null,false);AC.u[e]={pw:p,uid:u.uid};setU(u);return{user:u}};
+  const signInWithEmailAndPassword=async(a,e,p)=>{e=e.toLowerCase();const x=AC.u[e];if(!x||x.pw!==p)throw err('auth/invalid-credential');setU(mk(x.uid,e,x.name||null,false));return{user:cu}};
+  const updateProfile=async(u,d)=>{Object.assign(u,d);if(u.email&&AC.u[u.email])AC.u[u.email].name=u.displayName;save()};
+  return{initializeApp:()=>({}),getAuth:()=>({}),getFirestore:()=>({}),onAuthStateChanged,signInAnonymously,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut:async()=>setU(null),sendPasswordResetEmail:async()=>{},updateProfile,
+    collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,limit,runTransaction,increment,arrayUnion,serverTimestamp,Timestamp,onSnapshot,getCountFromServer};
+}
+/* ===== AKHIR LAPISAN DATA ===== */
+const {initializeApp,getAuth,onAuthStateChanged,signInAnonymously,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,sendPasswordResetEmail,updateProfile,getFirestore,collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,query,where,orderBy,limit,runTransaction,increment,arrayUnion,serverTimestamp,Timestamp,onSnapshot,getCountFromServer}=M;
+let auth,db;{const ap=initializeApp(FB);auth=getAuth(ap);db=getFirestore(ap)}
+
+const $=s=>document.querySelector(s);
+const IC={
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  flag:'<path d="M4 22V3"/><path d="M4 4h13l-2 4 2 4H4"/>',
+  bag:'<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  chat:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>'
+};
+const ic=(n,s=18)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
+
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rp=n=>'Rp '+Number(n||0).toLocaleString('id-ID');
+const dt=t=>t?.toMillis?new Date(t.toMillis()).toLocaleString('id-ID'):'-';
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2600)};
+const guard=async f=>{try{return await f()}catch(e){console.error(e);toast(e.code==='permission-denied'?'Ditolak: bukan admin / rules belum dipasang':'Gagal: '+(e.message||e.code))}};
+const comp=(f,m,q,t)=>new Promise((ok,no)=>{if(!f||!/^image\//.test(f.type)||f.size>8e6)return no(Error('Pilih gambar maks 8 MB'));const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const k=Math.min(1,m/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);ok(c.toDataURL(t,q))};i.onerror=()=>no(Error('Gambar rusak'));i.src=r.result};r.readAsDataURL(f)});
+const Q=(c,...q)=>getDocs(query(collection(db,c),...q)).then(s=>s.docs.map(d=>({id:d.id,...d.data()})));
+const T={dash:['Ringkasan','grid'],rep:['Laporan','flag'],lst:['Iklan','bag'],usr:['Pengguna','user'],cmt:['Komentar','chat'],ban:['Banner','image'],log:['Audit log','clock']};
+let tab='dash',me=null;
+
+const log=(action,target,note='')=>addDoc(collection(db,'auditLogs'),{admin:me.uid,email:me.email,action,target,note,at:serverTimestamp()});
+const row=(img,t,sub,btns='')=>`<div class="box r1">${img?`<img src="${esc(img)}" alt="">`:''}<div>${t}<div class="mt">${sub}</div><div class="bt">${btns}</div></div></div>`;
+const bt=(label,fn,cls='o')=>`<button class="btn ${cls} s" onclick="${fn}">${label}</button>`;
+const none=t=>`<div class="box mt none" style="text-align:center;padding:30px">${t}</div>`;
+
+/* ===== GERBANG LOGIN + CEK ROLE ADMIN (di server lewat admins/{uid}) ===== */
+function loginUI(msg=''){$('#out').hidden=true;$('#who').textContent='';$('#root').innerHTML=`<form class="fm box" onsubmit="login(event)"><h2>Masuk admin</h2>${msg?`<p class="mt">${msg}</p>`:''}<input id="e" type="email" placeholder="Email" required autocomplete="email"><input id="p" type="password" placeholder="Kata sandi" required autocomplete="current-password"><button class="btn">Masuk</button></form>`}
+async function login(e){e.preventDefault();try{await signInWithEmailAndPassword(auth,$('#e').value.trim(),$('#p').value)}catch(x){toast('Email atau kata sandi salah')}}
+const logout=()=>signOut(auth);
+
+if(LOCAL){me={uid:'local',email:'admin-lokal'};$('#who').textContent='Mode lokal (Firebase belum diisi)';$('#root').innerHTML='<div class="tabs" id="tabs"></div><div id="main"></div>';view()}
+else onAuthStateChanged(auth,async u=>{
+  if(!u||u.isAnonymous){me=null;return loginUI()}
+  let ok=false;try{ok=(await getDoc(doc(db,'admins',u.uid))).exists()}catch{}
+  if(!ok){me=null;$('#out').hidden=false;$('#root').innerHTML=`<div class="fm box"><h2>Bukan admin</h2><p class="mt">Akun ini belum terdaftar sebagai admin. Minta pemilik membuat dokumen <b>admins/${esc(u.uid)}</b> di Firestore.</p></div>`;return}
+  me=u;$('#who').textContent=u.email;$('#out').hidden=false;
+  $('#root').innerHTML='<div class="tabs" id="tabs"></div><div id="main"></div>';view();
+});
+
+/* ===== TAMPILAN TIAP TAB ===== */
+async function view(){
+  $('#tabs').innerHTML=Object.entries(T).map(([k,[v,i]])=>`<button class="chip ${k===tab?'on':''}" onclick="go('${k}')">${ic(i,16)} ${v}</button>`).join('');
+  const m=$('#main');m.innerHTML=none('Memuat…');
+  await guard(async()=>{
+    if(tab==='dash'){
+      const c=q=>getCountFromServer(q).then(s=>s.data().count);
+      const [u,l,k,r,a]=await Promise.all([c(collection(db,'users')),c(collection(db,'listings')),c(collection(db,'comments')),c(query(collection(db,'reports'),where('status','==','open'))),c(query(collection(db,'listings'),where('status','==','active')))]);
+      m.innerHTML=`<div class="st">${[['Pengguna',u],['Iklan total',l],['Iklan aktif',a],['Komentar',k],['Laporan terbuka',r]].map(([x,y])=>`<div class="box"><div class="mt">${x}</div><b style="font-size:28px">${y}</b></div>`).join('')}</div>`}
+    if(tab==='rep'){const a=(await Q('reports',where('status','==','open'))).sort((x,y)=>(y.at?.toMillis?.()||0)-(x.at?.toMillis?.()||0));
+      m.innerHTML=a.map(r=>row('',`<span class="tag x">${esc(r.type)}</span> ${esc(r.reason)}`,`${dt(r.at)} · target: ${esc(r.target)}${r.listingId?` · <a target="_blank" href="index.html#/iklan/${esc(r.listingId)}">lihat iklan</a>`:''}`,bt('Tindak','act(\''+r.id+'\')','r')+bt('Abaikan','dismiss(\''+r.id+'\')'))).join('')||none(ic('shield',28)+'<br>Tidak ada laporan terbuka')}
+    if(tab==='lst'){const a=await Q('listings',orderBy('createdAt','desc'),limit(50));
+      m.innerHTML=a.map(l=>row(l.images?.[0],`<b>${esc(l.title)}</b>`,`${rp(l.price)} · ${esc(l.sellerName)} · ${esc(l.city)} · <span class="tag">${esc(l.status)}</span> · ${ic('eye',13)} ${l.views||0}`,`<a class="btn o s" style="text-decoration:none;color:inherit" target="_blank" href="index.html#/iklan/${l.id}">Buka</a>`+(l.status==='hidden'?bt('Aktifkan',`lstSt('${l.id}','active')`):bt('Sembunyikan',`lstSt('${l.id}','hidden')`))+bt('Hapus',`lstDel('${l.id}')`,'r'))).join('')||none('Belum ada iklan')}
+    if(tab==='usr'){const a=await Q('users',limit(50));
+      m.innerHTML=a.map(u=>row(u.avatar,`<b>${esc(u.name)}</b> ${u.disabled?'<span class="tag x">nonaktif</span>':''}`,`${esc(u.city||'-')} · bergabung ${dt(u.joined)} · ${u.id.slice(0,8)}…`,`<a class="btn o s" style="text-decoration:none;color:inherit" target="_blank" href="index.html#/penjual/${u.id}">Profil</a>`+bt(u.disabled?'Aktifkan':'Nonaktifkan',`usrSt('${u.id}',${!u.disabled})`,u.disabled?'o':'r'))).join('')||none('Belum ada pengguna')}
+    if(tab==='cmt'){const a=await Q('comments',orderBy('at','desc'),limit(50));
+      m.innerHTML=a.map(c=>row(c.avatar,`<b>${esc(c.name)}</b>: ${esc(c.text)}`,`${dt(c.at)} · <a target="_blank" href="index.html#/iklan/${esc(c.listingId)}">iklan</a>`,bt('Hapus',`cmtDel('${c.id}','${esc(c.listingId)}')`,'r'))).join('')||none('Belum ada komentar')}
+    if(tab==='ban'){const [a,g]=await Promise.all([Q('banners',orderBy('at','desc')),getDoc(doc(db,'settings','logo'))]),L=g.exists()?g.data().img:'';
+      const fm=(t,h,k)=>`<div class="box fm" style="margin:0;max-width:none"><b>${t}</b>${h}<input type="file" accept="image/*" onchange="upImg(this.files[0],'${k}')"></div>`;
+      m.innerHTML=fm('Logo aplikasi',`<div class="r1"><img src="${esc(L||'icon.png')}" alt=""><div class="mt">Tampil di header dan favicon situs. Ikon APK/instal mengikuti file icon.png saat dibuild ulang.</div></div>${L?`<div class="bt">${bt('Hapus logo (pakai bawaan)','logoDel()','r')}</div>`:''}`,'logo')+fm('Tambah foto banner','<span class="mt">Format lebar (mis. 3:1), otomatis dikompres. Maks. 5 banner terbaru tampil bergantian di beranda. Untuk mengganti: unggah yang baru lalu hapus yang lama.</span>','banner')+(a.filter(b=>b.img).map(b=>row(b.img,'<b>Banner</b>',dt(b.at),bt('Hapus',`banDel('${b.id}')`,'r'))).join('')||none('Belum ada banner kustom, beranda memakai banner bawaan'))}
+    if(tab==='log'){const a=await Q('auditLogs',orderBy('at','desc'),limit(50));
+      m.innerHTML=a.map(l=>row('',`<b>${esc(l.action)}</b> → ${esc(l.target)}`,`${dt(l.at)} · ${esc(l.email)}${l.note?' · '+esc(l.note):''}`)).join('')||none('Belum ada aktivitas')}
+  });
+}
+const go=k=>{tab=k;view()};
+
+/* ===== AKSI MODERASI (semuanya tercatat di auditLogs) ===== */
+const done=async(a,t,n)=>{await log(a,t,n);toast('Tindakan dicatat');view()};
+const lstSt=(id,s)=>guard(async()=>{await updateDoc(doc(db,'listings',id),{status:s});await done('listing.'+s,id)});
+const lstDel=id=>confirm('Hapus iklan permanen?')&&guard(async()=>{await deleteDoc(doc(db,'listings',id));await done('listing.delete',id)});
+const usrSt=(id,d)=>guard(async()=>{await updateDoc(doc(db,'users',id),{disabled:d});await done(d?'user.disable':'user.enable',id)});
+const cmtDel=(id,lid)=>confirm('Hapus komentar ini?')&&guard(async()=>{await deleteDoc(doc(db,'comments',id));await done('comment.delete',id,'iklan '+lid)});
+const dismiss=id=>guard(async()=>{await updateDoc(doc(db,'reports',id),{status:'dismissed',by:me.uid});await done('report.dismiss',id)});
+const act=id=>guard(async()=>{
+  const r=(await getDoc(doc(db,'reports',id))).data();
+  if(!confirm(`Tindak laporan ${r.type}? ${r.type==='listing'?'Iklan akan disembunyikan.':r.type==='comment'?'Komentar akan dihapus.':'Akun akan dinonaktifkan.'}`))return;
+  if(r.type==='listing')await updateDoc(doc(db,'listings',r.target),{status:'hidden'});
+  else if(r.type==='comment')await deleteDoc(doc(db,'comments',r.target));
+  else await updateDoc(doc(db,'users',r.target),{disabled:true});
+  await updateDoc(doc(db,'reports',id),{status:'resolved',by:me.uid});await done('report.resolve',id,r.type+':'+r.target)});
+const upImg=(f,k)=>guard(async()=>{const o=k==='logo',d=await comp(f,o?256:1600,o?1:.75,o?'image/png':'image/jpeg');if(o)await setDoc(doc(db,'settings','logo'),{img:d,at:serverTimestamp()});else await addDoc(collection(db,'banners'),{img:d,at:serverTimestamp()});await done(o?'logo.set':'banner.add',k)});
+const logoDel=()=>guard(async()=>{await deleteDoc(doc(db,'settings','logo'));await done('logo.delete','logo')});
+const banDel=id=>guard(async()=>{await deleteDoc(doc(db,'banners',id));await done('banner.delete',id)});
+Object.assign(window,{login,logout,go,lstSt,lstDel,usrSt,cmtDel,dismiss,act,upImg,logoDel,banDel});
+</script>
+</body>
+</html>
