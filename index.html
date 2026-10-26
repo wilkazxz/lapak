@@ -166,6 +166,7 @@ function localFB(){
   try{LS=window.localStorage;const x=JSON.parse(LS.getItem('lapak_db')||'null');if(x){S=rev(x.S);AC=x.AC;cu=AC.cur}}catch{}
   const save=()=>{try{LS&&LS.setItem('lapak_db',JSON.stringify({S,AC}))}catch{}};
   const col=c=>S[c]||(S[c]={}),LI=[],AL=[];
+  try{addEventListener('storage',e=>{if(e.key==='lapak_db'&&e.newValue){S=rev(JSON.parse(e.newValue).S);LI.forEach(l=>setTimeout(l.f,0))}})}catch{}
   const fire=c=>{save();LI.filter(l=>l.c===c).forEach(l=>setTimeout(l.f,0))};
   const val=v=>v instanceof TS?v.m:v;
   const getp=(o,k)=>k.split('.').reduce((a,b)=>a?.[b],o);
@@ -305,7 +306,7 @@ onAuthStateChanged(auth,async u=>{
     if(prof.disabled){await signOut(auth);toast('Akun dinonaktifkan oleh admin');return}
     f.forEach(d=>favs.add(d.data().listingId));
     unsubC=onSnapshot(query(collection(db,'conversations'),where('members','array-contains',uid)),s=>{const n=s.docs.filter(d=>{const c=d.data();return c.lastBy&&c.lastBy!==uid&&(c.seen?.[uid]||0)<c.lastAt}).length;unread=!!n;document.querySelectorAll('.cdot').forEach(d=>d.hidden=!unread)},()=>{})});
-  await site();nav();hideSp();R();
+  await site();watchAll();nav();hideSp();R();
 });
 
 /* ===== DATA LISTING ===== */
@@ -347,7 +348,16 @@ async function countView(l){
     const e=$('#vw');if(added&&e)e.textContent=(await getDoc(lr)).data().views;
   }catch(e){console.warn('view',e.code)}
 }
+/* ===== REALTIME: tampilan otomatis berubah saat data di Firestore berubah ===== */
+let LV=0,lt;
+const re=()=>{clearTimeout(lt);lt=setTimeout(()=>{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&a.value&&a.id!=='q')return;R()},400)};
+const on=(q,f,keep)=>{let first=1;const u=onSnapshot(q,s=>{if(first){first=0;return}f(s)},()=>{});keep?unsub.push(u):0;return u};
+function watchAll(){if(LV)return;LV=1;
+  on(query(collection(db,'listings'),orderBy('createdAt','desc'),limit(80)),s=>{cache=s.docs.map(d=>({id:d.id,...d.data()}));last=Date.now();const r=rt();if(r==='')draw();else if(['akun','favorit','penjual'].includes(r))re()});
+  const bn=async()=>{await site();if($('.hero'))heroBg();if($('#app')&&!rt())re()};
+  on(query(collection(db,'banners'),orderBy('at','desc'),limit(5)),bn);on(doc(db,'settings','notice'),bn);on(doc(db,'settings','logo'),bn)}
 async function detail(id){
+  unsub.forEach(f=>f());unsub=[];
   A.innerHTML=`<div class="grid" style="grid-template-columns:1fr">${skel(1)}</div>`;
   const s=await getDoc(doc(db,'listings',id));
   if(!s.exists())return A.innerHTML=empty('Iklan tidak ditemukan','Mungkin sudah dihapus penjualnya.','<a class="btn" href="#/">Ke beranda</a>');
@@ -356,6 +366,7 @@ async function detail(id){
   document.title=l.title+' — Lapak.id';if(!mine&&live(l))countView(l);
   await load().catch(()=>{});
   const [lk,cs,os]=await Promise.all([uid?getDoc(doc(db,'likes',id+'_'+uid)):null,getDocs(query(collection(db,'comments'),where('listingId','==',id))),getDocs(query(collection(db,'listings'),where('sellerId','==',l.sellerId),limit(12)))]);
+  on(doc(db,'listings',id),re,1);on(query(collection(db,'comments'),where('listingId','==',id)),re,1);
   const liked=lk?.exists(),cm=cs.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ms(a.at)-ms(b.at));
   const oth=os.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.id!==id&&live(x));
   const sim=cache.filter(x=>x.cat===l.cat&&x.id!==id&&live(x)).slice(0,4),wa=waLink(l);
