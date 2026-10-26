@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Lapak.id — Temukan Barang, Temukan Peluang</title>
 <meta name="description" content="Marketplace lokal untuk jual beli COD dan bertemu langsung. Gratis, tanpa komisi.">
 <meta name="theme-color" content="#064e3b">
@@ -237,6 +237,37 @@ body{color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,-apple-system,'S
 .cd .m2 span{display:inline-flex;align-items:center;gap:3px}
 .cd .bd{background:#064e3b;font-size:10.5px;padding:2px 8px}
 </style>
+<style>
+:root{--g:#2f9bff;--gd:#0b5cad;--nv:#0a3f7a;--g1:#e0f0ff;--bg:#eaf5ff;--ln:#cfe3f7;--acc:#fbbf24;--glass:rgba(255,255,255,.9);--glass-b:rgba(255,255,255,.7)}
+body::before{animation:none!important;background:radial-gradient(40% 35% at 15% 10%,#7dc4ff44,transparent 70%),radial-gradient(35% 30% at 90% 25%,#fde68a55,transparent 70%)!important}
+header{background:linear-gradient(120deg,#38a8ff,#0b5cad)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.cd,.box,.lr,.em,.mc,.bb{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.cd,.cd:hover,.btn:hover,.sb input:focus{transform:none!important}
+.cd{transition:box-shadow .2s!important}.cd:hover .im img{transform:none!important}
+input,select,textarea{font-size:16px}
+.btn{background:linear-gradient(135deg,#2f9bff,#0b5cad);box-shadow:0 2px 8px #0b5cad33;transition:filter .15s}
+.btn:active{filter:brightness(.92)}
+.btn.a{background:linear-gradient(135deg,#fde68a,#fbbf24);color:#4a3200}
+.btn.o{background:#fff;color:#0b5cad;border:1px solid var(--ln);box-shadow:none}
+.vf{color:#1d9bf0;vertical-align:-3px;flex:none}
+
+.cs{display:flex;align-items:center;gap:7px;padding:8px 10px 0}
+.cs img{width:22px;height:22px;border-radius:50%;object-fit:cover}
+.cs b{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ac{display:flex;gap:6px;padding:8px 10px 10px}
+.ac button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--ln);background:#fff;color:#0b5cad;border-radius:10px;padding:6px;font-weight:700;font-size:12px;cursor:pointer}
+.ac button.on{background:#fff7d6;border-color:#fbbf24;color:#8a5a00}
+.qc{display:flex;gap:6px;padding:0 10px 10px}.qc input{padding:7px 10px}
+</style>
+<style>
+.fm{background:#fff;border:1px solid var(--ln);border-radius:20px;padding:16px;box-shadow:0 10px 30px #0b5cad14}
+.fm input,.fm select,.fm textarea{border:1.5px solid var(--ln);background:#f7fbff;transition:border-color .15s,box-shadow .15s}
+.fm input:focus,.fm select:focus,.fm textarea:focus{outline:0;border-color:#2f9bff;box-shadow:0 0 0 3px #2f9bff2e;background:#fff}
+.fm input[type=file]{padding:18px 12px;border:2px dashed #7dc4ff;background:#f0f8ff;cursor:pointer}
+.fm>.btn{padding:13px;font-size:15px;position:sticky;bottom:10px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.tk{letter-spacing:-2px;font-weight:700}.bb.me .tk{color:#dbeafe}.bb.me .tk.rd{color:#fde047}
+</style>
 </head>
 <body>
 <div id="splash" role="img" aria-label="Lapak.id"></div>
@@ -428,7 +459,21 @@ onAuthStateChanged(auth,async u=>{
 let LIM=80;
 async function load(force){if(!force&&cache.length&&Date.now()-last<3e4)return;const s=await getDocs(query(collection(db,'listings'),orderBy('createdAt','desc'),limit(LIM)));cache=s.docs.map(d=>({id:d.id,...d.data()}));last=Date.now()}
 
-const card=l=>`<a class="cd" href="#/iklan/${l.id}/${slug(l.title)}"><div class="im"><img loading="lazy" src="${esc(l.images?.[0]||'icon.png')}" alt="${esc(l.title)}"><span class="bd">${esc(l.cond)}</span>${me?`<button class="fv ${favs.has(l.id)?'on':''}" aria-label="Favorit" onclick="event.preventDefault();fav('${l.id}',this)">${ic('heart',17)}</button>`:''}</div><div class="cb"><div class="pr">${rp(l.price)}</div><div class="tt">${esc(l.title)}</div><div class="mt">${ic('pin',13)} ${esc(l.city)} · ${ago(l.createdAt)}</div><div class="mt m2"><span>${ic('eye',13)} ${l.views||0}</span><span>${ic('thumb',13)} ${l.likes||0}</span><span>${ic('chat',13)} ${l.commentsCount||0}</span></div></div></a>`;
+const VER=new Set(),LK=new Set();let VL=0;
+const loadVer=async()=>{if(VL)return;VL=1;
+  try{(await getDocs(query(collection(db,'users'),where('verified','==',true)))).forEach(d=>VER.add(d.id))}catch(e){}
+  try{if(uid)(await getDocs(query(collection(db,'likes'),where('uid','==',uid)))).forEach(d=>LK.add(d.data().listingId))}catch(e){}};
+const card=l=>`<div class="cd" data-id="${l.id}"><a href="#/iklan/${l.id}/${slug(l.title)}"><div class="im"><img loading="lazy" src="${esc(l.images?.[0]||'icon.png')}" alt="${esc(l.title)}"><span class="bd">${esc(l.cond)}</span>${me?`<button class="fv ${favs.has(l.id)?'on':''}" aria-label="Favorit" onclick="event.preventDefault();fav('${l.id}',this)">${ic('heart',17)}</button>`:''}</div><div class="cb"><div class="pr">${rp(l.price)}</div><div class="tt">${esc(l.title)}</div><div class="mt">${ic('pin',13)} ${esc(l.city)} · ${ago(l.createdAt)}</div></div></a>
+<a class="cs" href="#/penjual/${l.sellerId}"><img src="${esc(l.sellerAvatar||'icon.png')}" alt=""><b>${esc(l.sellerName)}</b>${VER.has(l.sellerId)?`<span class="vf" title="Terverifikasi">${ic('check',14)}</span>`:''}</a>
+<div class="ac"><button class="${LK.has(l.id)?'on':''}" onclick="qLike('${l.id}',this)">${ic('thumb',14)} <span data-k="likes">${l.likes||0}</span></button><button onclick="qOpen('${l.id}')">${ic('chat',14)} <span data-k="commentsCount">${l.commentsCount||0}</span></button><span class="mt" style="flex:none;align-self:center">${ic('eye',13)} <span data-k="views">${l.views||0}</span></span></div>
+<div class="qc" id="qc-${l.id}" hidden><input maxlength="300" placeholder="Tulis komentar..." onkeydown="if(event.key==='Enter')qSend('${l.id}')"><button class="btn s" onclick="qSend('${l.id}')">Kirim</button></div></div>`;
+const qOpen=id=>{const e=$('#qc-'+id);e.hidden=!e.hidden;if(!e.hidden)e.querySelector('input').focus()};
+async function qLike(id,b){if(!need())return;await guard(async()=>{const r=doc(db,'likes',id+'_'+uid),lr=doc(db,'listings',id);
+  const on=await runTransaction(db,async t=>{const s=await t.get(r);if(s.exists()){t.delete(r);t.update(lr,{likes:increment(-1)});return false}t.set(r,{listingId:id,uid,at:serverTimestamp()});t.update(lr,{likes:increment(1)});return true});
+  on?LK.add(id):LK.delete(id);b.classList.toggle('on',on);const c=cache.find(x=>x.id===id);if(c)c.likes=(c.likes||0)+(on?1:-1);b.querySelector('span').textContent=c?c.likes:b.querySelector('span').textContent})}
+async function qSend(id){if(!need())return;const w=$('#qc-'+id),i=w.querySelector('input'),t=i.value.trim();
+  if(!t||t.length>300)return toast('Komentar 1–300 karakter');if(Date.now()-lastC<1e4)return toast('Tunggu 10 detik sebelum komentar lagi');lastC=Date.now();
+  await guard(async()=>{await addDoc(collection(db,'comments'),{listingId:id,uid,name:prof?.name||'Pengguna',avatar:prof?.avatar||'',text:t,at:serverTimestamp()});await updateDoc(doc(db,'listings',id),{commentsCount:increment(1)});i.value='';w.hidden=true;toast('Komentar terkirim')})}
 
 /* ===== HOME ===== */
 async function home(){
@@ -440,7 +485,7 @@ async function home(){
   <select aria-label="Urutan" onchange="setF('sort',this.value)"><option value="new">Terbaru</option><option value="pop" ${F.sort==='pop'?'selected':''}>Terpopuler</option><option value="lo" ${F.sort==='lo'?'selected':''}>Harga termurah</option><option value="hi" ${F.sort==='hi'?'selected':''}>Harga termahal</option></select></div>
   ${prof?.city&&!F.loc?`<button class="chip" onclick="setF('loc','${esc(prof.city).replace(/'/g,'')}');home()">${ic('pin',15)} Di sekitar ${esc(prof.city)}</button>`:''}
   <div id="pp"></div><div class="row" style="margin:8px 0"><h2 style="flex:1;margin:0" id="gt">Iklan terbaru</h2><span class="mt" id="cnt" style="flex:none"></span></div><div id="gr" class="grid">${skel(8)}</div>`;
-  catBar();heroBg();await guard(()=>load());draw();
+  catBar();heroBg();await guard(()=>load());await loadVer();draw();
 }
 function catBar(){const c=$('#cats');if(c)c.innerHTML=`<button class="ct ${F.cat?'':'on'}" onclick="setF('cat','');catBar()"><i>${ic('grid',24)}</i>Semua</button>`+CATS.map(([n,i])=>`<button class="ct ${F.cat===n?'on':''}" onclick="setF('cat','${n}');catBar()"><i>${ic(i,24)}</i>${n}</button>`).join('')}
 function setF(k,v){F[k]=v;if(k==='q'&&$('#q').value!==v)$('#q').value=v;if($('#gr'))draw();else if(k==='q'&&v)location.hash='#/'}
@@ -469,7 +514,13 @@ let LV=0,lt;
 const re=()=>{clearTimeout(lt);lt=setTimeout(()=>{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&a.value&&a.id!=='q')return;R()},400)};
 const on=(q,f,keep)=>{let first=1;const u=onSnapshot(q,s=>{if(first){first=0;return}f(s)},()=>{});keep?unsub.push(u):0;return u};
 let LU;
-const listenL=()=>{LU&&LU();LU=on(query(collection(db,'listings'),orderBy('createdAt','desc'),limit(LIM)),s=>{cache=s.docs.map(d=>({id:d.id,...d.data()}));last=Date.now();const r=rt();if(r==='')draw();else if(['akun','favorit','penjual'].includes(r))re()})};
+const sameBase=(a,b)=>{if(!a)return false;for(const x of new Set([...Object.keys(a),...Object.keys(b)])){if(['id','views','likes','commentsCount'].includes(x))continue;if(JSON.stringify(a[x])!==JSON.stringify(b[x]))return false}return true};
+const patchCounts=(id,d)=>{const c=document.querySelector(`.cd[data-id="${id}"]`);if(!c)return;['views','likes','commentsCount'].forEach(k=>c.querySelectorAll(`[data-k="${k}"]`).forEach(e=>{const v=String(d[k]||0);if(e.textContent!==v)e.textContent=v}))};
+const listenL=()=>{LU&&LU();LU=on(query(collection(db,'listings'),orderBy('createdAt','desc'),limit(LIM)),s=>{
+  const prev=new Map(cache.map(x=>[x.id,x]));cache=s.docs.map(d=>({id:d.id,...d.data()}));last=Date.now();const r=rt();
+  if(r===''){const ch=s.docChanges?s.docChanges():[];
+    if(ch.length&&ch.every(c=>c.type==='modified'&&sameBase(prev.get(c.doc.id),c.doc.data())))ch.forEach(c=>patchCounts(c.doc.id,c.doc.data()));else draw()}
+  else if(['akun','favorit','penjual'].includes(r))re()})};
 const more=async()=>{LIM+=80;await guard(()=>load(true));listenL();draw()};
 function watchAll(){if(LV)return;LV=1;
   listenL();
@@ -500,7 +551,7 @@ async function detail(id){
   ${mine?`<div class="row"><a class="btn o" href="#/jual/${id}">Edit iklan</a><a class="btn o" href="#/akun">Kelola</a></div>`:''}
   <div class="row" style="margin-top:8px"><button class="btn o s" id="lb" onclick="like('${id}')">${ic('thumb',15)} ${liked?'Batal suka':'Suka'}</button>${l.address||l.city?`<a class="btn o s" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${mq}">${ic('nav',15)} Lihat lokasi</a>`:''}<button class="btn o s" onclick="share('${esc(l.title).replace(/'/g,'')}','${id}')">${ic('share',15)} Bagikan</button><button class="btn o s" onclick="report('listing','${id}','${id}')">${ic('flag',15)} Laporkan</button></div>
   <div class="box warn">${ic('alert',20)}<div><b>Tips aman:</b> periksa barang sebelum membayar, bertemu di tempat umum yang ramai, dan jangan kirim uang muka ke pihak yang belum tepercaya.</div></div>
-  <a class="box lr" href="#/penjual/${l.sellerId}"><img src="${esc(l.sellerAvatar||'icon.png')}" alt=""><div><b>${esc(l.sellerName)}</b> ${sv?.data()?.verified?`<span style="color:var(--g);vertical-align:-3px" title="Terverifikasi">${ic('check',17)}</span>`:''}<div class="mt">Lihat profil penjual</div></div></a></div></div>
+  <a class="box lr" href="#/penjual/${l.sellerId}"><img src="${esc(l.sellerAvatar||'icon.png')}" alt=""><div><b>${esc(l.sellerName)}</b> ${sv?.data()?.verified?`<span class="vf" title="Terverifikasi">${ic('check',17)}</span>`:''}<div class="mt">Lihat profil penjual</div></div></a></div></div>
   <h3>Tanya jawab (${cm.length})</h3><div class="box">${cm.map(c=>`<div class="cm"><img src="${esc(c.avatar||'icon.png')}" alt=""><div><b>${esc(c.name)}</b> <small>${ago(c.at)}</small> ${c.uid===uid?`<a href="#" onclick="delC('${c.id}','${id}');return false">hapus</a>`:`<a href="#" onclick="report('comment','${c.id}','${id}');return false">laporkan</a>`}<p>${esc(c.text)}</p></div></div>`).join('')||'<p class="mt">Belum ada pertanyaan.</p>'}
   <div class="row" style="margin-top:8px"><input id="ci" maxlength="300" placeholder="${me?'Tanyakan kondisi atau kelengkapan…':'Masuk untuk bertanya'}" ${me?'':'disabled'}><button class="btn" style="flex:none" onclick="postC('${id}')">Kirim</button></div></div>
   ${oth.length?`<h3>Barang lain dari penjual ini</h3><div class="grid">${oth.slice(0,4).map(card).join('')}</div>`:''}
@@ -593,7 +644,7 @@ async function seller(id){
   if(!u.exists())return A.innerHTML=empty('Penjual tidak ditemukan');
   const p=u.data(),ls=s.docs.map(d=>({id:d.id,...d.data()})),act=ls.filter(live),sold=ls.filter(l=>l.status==='sold').length,wa=act.map(waLink).find(Boolean);
   document.title=p.name+' — Lapak.id';
-  A.innerHTML=`<div class="box" style="text-align:center;margin-top:16px"><img class="av" style="width:80px;height:80px" src="${esc(p.avatar||'icon.png')}" alt=""><h2 style="margin:6px 0 0">${esc(p.name)} ${p.verified?`<span style="color:var(--g);vertical-align:-3px" title="Terverifikasi">${ic('check',22)}</span>`:''}</h2><p class="mt">${esc(p.bio||'')}</p>
+  A.innerHTML=`<div class="box" style="text-align:center;margin-top:16px"><img class="av" style="width:80px;height:80px" src="${esc(p.avatar||'icon.png')}" alt=""><h2 style="margin:6px 0 0">${esc(p.name)} ${p.verified?`<span class="vf" title="Terverifikasi">${ic('check',22)}</span>`:''}</h2><p class="mt">${esc(p.bio||'')}</p>
   <p class="mt">${p.hideCity?'':ic('pin',14)+' '+esc(p.city||'-')+' · '}Bergabung ${p.joined?new Date(ms(p.joined)).toLocaleDateString('id-ID',{month:'long',year:'numeric'}):'-'}<br>${act.length} iklan aktif · ${sold} barang terjual</p>
   <div class="row" style="justify-content:center">${wa&&id!==uid?`<a class="btn o" target="_blank" rel="noopener" href="${wa}">WhatsApp</a>`:''}${id!==uid?`<button class="btn o" onclick="report('user','${id}','')">${ic('flag',15)} Laporkan pengguna</button>`:''}</div></div>
   <h3>Iklan aktif</h3><div class="grid">${act.map(card).join('')||empty('Belum ada iklan aktif')}</div>`;
@@ -614,16 +665,17 @@ async function chats(){
 }
 async function thread(cid){
   if(!me){A.innerHTML=empty('Masuk untuk membuka chat');return}
-  A.innerHTML=`<div class="narrow chat" style="margin:auto"><div class="ch"><a href="#/chat">${ic('back',16)} Chat</a> · <b id="cn"></b><div class="mt"><a id="ct" href="#"></a></div><div class="row" style="margin-top:4px"><button class="btn s" id="cc" onclick="startCall('${cid}')">${ic('phone',16)} Telepon</button><button class="btn o s" id="cb" onclick="blockC('${cid}')">Blokir</button><button class="btn o s" id="cr">Laporkan</button></div></div><div id="ms"></div><form class="row" style="flex-wrap:nowrap" onsubmit="send(event,'${cid}')"><input id="mi2" maxlength="500" placeholder="Tulis pesan…" autocomplete="off" required><button class="btn" style="flex:none">Kirim</button></form></div>`;
+  A.innerHTML=`<div class="narrow chat" style="margin:auto"><div class="ch"><a href="#/chat">${ic('back',16)} Chat</a> · <b id="cn"></b><div class="mt"><a id="ct" href="#"></a></div><div class="row" style="margin-top:4px"><button class="btn s" id="cc" onclick="startCall('${cid}')">${ic('phone',16)} Telepon</button><button class="btn o s" id="cb" onclick="blockC('${cid}')">Blokir</button><button class="btn o s" id="cr">Laporkan</button></div></div><div id="ty" class="mt" style="padding:2px 10px" hidden>sedang mengetik…</div><div id="ms"></div><form class="row" style="flex-wrap:nowrap" onsubmit="send(event,'${cid}')"><input id="mi2" oninput="typing('${cid}')" maxlength="500" placeholder="Tulis pesan…" autocomplete="off" required><button class="btn" style="flex:none">Kirim</button></form></div>`;
   unsub.push(onSnapshot(doc(db,'conversations',cid),s=>{if(!s.exists())return;cur=s.data();const o=cur.members.find(x=>x!==uid);
     $('#cn').textContent=cur.names?.[o]||'Pengguna';$('#ct').textContent=cur.title;$('#ct').href='#/iklan/'+cur.listingId;$('#cr').onclick=()=>report('user',o,cur.listingId);
-    $('#cb').textContent=cur.blocked?.length?'Percakapan diblokir':'Blokir';const f=$('#mi2');if(f)f.disabled=!!cur.blocked?.length}));
+    $('#cb').textContent=cur.blocked?.length?'Percakapan diblokir':'Blokir';const f=$('#mi2');if(f)f.disabled=!!cur.blocked?.length;const tp=cur.typing?.[o],ty=$('#ty');if(ty){ty.hidden=!(tp&&Date.now()-tp<4000);clearTimeout(ty._t);if(!ty.hidden)ty._t=setTimeout(()=>ty.hidden=true,4000)}}));
   unsub.push(onSnapshot(query(collection(db,'conversations',cid,'messages'),orderBy('at')),s=>{
     const m=s.docs.map(d=>d.data()),box=$('#ms');if(!box)return;const lm=[...m].reverse().find(x=>x.from===uid);
-    box.innerHTML=m.map(x=>`<div class="bb ${x.from===uid?'me':''}">${esc(x.text)}<small>${new Date(x.at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}${x===lm&&x.from===uid&&Object.entries(cur.seen||{}).some(([k,t])=>k!==uid&&t>=x.at)?' · dibaca':''}</small></div>`).join('');
-    box.scrollTop=box.scrollHeight;const e=m[m.length-1];
+    box.innerHTML=m.map(x=>`<div class="bb ${x.from===uid?'me':''}">${esc(x.text)}<small>${new Date(x.at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}${x.from===uid?(Object.entries(cur.seen||{}).some(([k,t])=>k!==uid&&t>=x.at)?' <span class="tk rd" title="Dibaca">✓✓</span>':' <span class="tk" title="Terkirim">✓</span>'):''}</small></div>`).join('');
+    box.scrollTop=box.scrollHeight;const cc=$('#cc');if(cc){const ok=new Set(m.map(x=>x.from)).size>=2;cc.disabled=!ok;cc.title=ok?'':'Telepon aktif setelah kedua pihak saling membalas chat'}const e=m[m.length-1];
     if(e&&e.from!==uid)updateDoc(doc(db,'conversations',cid),{['seen.'+uid]:Date.now()}).catch(()=>{})}));
 }
+let lastT=0;const typing=cid=>{if(Date.now()-lastT<2500)return;lastT=Date.now();updateDoc(doc(db,'conversations',cid),{['typing.'+uid]:Date.now()}).catch(()=>{})};
 async function send(e,cid){e.preventDefault();const i=$('#mi2'),t=i.value.trim();if(!t)return;
   if(cur.blocked?.length)return toast('Percakapan ini diblokir');if(Date.now()-lastM<800)return toast('Pelan-pelan ya');lastM=Date.now();i.value='';
   await guard(async()=>{const at=Date.now();await addDoc(collection(db,'conversations',cid,'messages'),{from:uid,text:t.slice(0,500),at});await updateDoc(doc(db,'conversations',cid),{last:t.slice(0,60),lastBy:uid,lastAt:at,['seen.'+uid]:at})})}
@@ -670,7 +722,8 @@ async function mkPC(id,side){const st=await navigator.mediaDevices.getUserMedia(
  CL.un.push(onSnapshot(collection(db,'calls',id,side==='caller'?'callee':'caller'),s=>s.docChanges().forEach(ch=>{if(ch.type!=='added')return;const c=ch.doc.data();pc.remoteDescription?pc.addIceCandidate(c).catch(()=>{}):pend.push(c)}),()=>{}));
  pc.onconnectionstatechange=()=>{const k=pc.connectionState;CL&&clearTimeout(CL.dc);if(k==='connected')cActive();if(k==='failed'){toast('Koneksi gagal');callEnd()}if(k==='disconnected'&&CL)CL.dc=setTimeout(()=>{if(CL&&CL.pc===pc&&pc.connectionState!=='connected'){toast('Koneksi terputus');callEnd()}},8000)};
  return pc}
-async function startCall(cid){if(LOCAL)return toast('Telepon butuh Firebase aktif');if(!me)return toast('Masuk dulu untuk menelepon');if(CL)return toast('Sedang dalam panggilan');
+const callOK=()=>{try{const n=Date.now(),a=JSON.parse(localStorage.getItem('callLog')||'[]').filter(t=>n-t<36e5);if(n-(a[a.length-1]||0)<6e4){toast('Tunggu 1 menit sebelum menelepon lagi');return false}if(a.length>=5){toast('Batas 5 panggilan per jam');return false}a.push(n);localStorage.setItem('callLog',JSON.stringify(a))}catch(e){}return true};
+async function startCall(cid){if(!callOK())return;if(LOCAL)return toast('Telepon butuh Firebase aktif');if(!me)return toast('Masuk dulu untuk menelepon');if(CL)return toast('Sedang dalam panggilan');
  if(!navigator.mediaDevices||!window.RTCPeerConnection)return toast('Browser belum mendukung telepon');if(cur.blocked?.length)return toast('Percakapan diblokir');
  const o=cur.members.find(x=>x!==uid),nm=cur.names?.[o]||'Pengguna',id=doc(collection(db,'calls')).id;
  CL={id,role:'caller',un:[],name:nm};cui('calling',nm);ring(true,'out');
