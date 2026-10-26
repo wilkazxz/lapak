@@ -115,6 +115,34 @@ header{position:sticky;top:0;z-index:20}
 .fm{padding:22px;background:var(--glass);border:1px solid var(--glass-b);border-radius:24px;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 24px 60px #064e3b30;animation:pop .6s var(--ease)}
 #toast{transition:opacity .35s,transform .45s var(--ease);transform:translate(-50%,20px)}#toast.on{transform:translate(-50%,0)}
 </style>
+<style id="ui-perf">
+body{text-rendering:auto}
+body::before{animation:none;will-change:auto;inset:0}
+*,*::before,*::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.cd,.box,.lr,.em{background:rgba(255,255,255,.88)}
+.chip,.ct i{background:rgba(255,255,255,.92)}
+.bb{background:#fff}.bb.me{background:#12b76a}
+header{background:linear-gradient(120deg,#12b76a,#064e3b)!important}
+#bn{background:#0b3d2eeb}
+#modal .mb{background:#022c22aa}
+.mc{background:#fff}
+#toast{background:#064e3b}
+.cd{contain:layout paint style;transition:transform .22s var(--ease)}
+.cd:hover{transform:translateY(-4px);box-shadow:0 6px 24px #064e3b14,inset 0 1px 0 #ffffffaa}
+.cd .im img{transition:transform .4s var(--ease)}.cd:hover .im img{transform:scale(1.05)}
+.ct i,.chip{transition:transform .2s var(--ease)}
+.chip:hover,.ct:hover i,.ct.on i{box-shadow:none}
+.btn{transition:transform .18s var(--ease),filter .18s}
+.btn:hover{box-shadow:0 8px 18px #05966940,inset 0 1px 0 #ffffff55}
+.btn.a,#bn a.fab span{animation:none}
+.sk .im,.sk i{background:#dcefe3;animation:pl 1.2s infinite}
+header.sc .nav{height:64px}.nav{transition:none}
+@media(min-width:900px){header.sc .nav{height:70px}}
+.rv{transform:translate3d(0,16px,0)}
+.rv.in{transition:opacity .45s var(--ease) var(--d,0s),transform .45s var(--ease) var(--d,0s)}
+.hero .hc{will-change:auto}
+html.lite .rv{opacity:1;transform:none}html.lite *{animation-duration:.01s!important;transition-duration:.01s!important}
+</style>
 </head>
 <body>
 <header><img src="icon.png" alt=""><b>Lapak.id Admin</b><span id="who" class="mt" style="color:#d1fae5"></span><button class="btn o s" id="out" hidden onclick="logout()">Keluar</button></header>
@@ -297,11 +325,12 @@ const bar=document.createElement('div');bar.id='sp';document.body.appendChild(ba
 const hd=document.querySelector('header');let tk=0;
 addEventListener('scroll',()=>{if(tk)return;tk=requestAnimationFrame(()=>{tk=0;const y=scrollY,h=document.documentElement.scrollHeight-innerHeight;
 bar.style.transform='scaleX('+(h>0?Math.min(1,y/h):0)+')';hd&&hd.classList.toggle('sc',y>20);
-const hc=document.querySelector('.hero .hc');if(hc&&y<700)hc.style.transform='translate3d(0,'+(y*.12)+'px,0)'})},{passive:true});
+})},{passive:true});
 document.addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.closest('.btn');if(!b||RM)return;
 const r=b.getBoundingClientRect(),s=Math.max(r.width,r.height)*2,p=document.createElement('span');p.className='rp';
 p.style.cssText='width:'+s+'px;height:'+s+'px;left:'+(e.clientX-r.left-s/2)+'px;top:'+(e.clientY-r.top-s/2)+'px';b.appendChild(p);setTimeout(()=>p.remove(),700)},{passive:true});
 if(RM)return;
+if((navigator.hardwareConcurrency||8)<=4||(navigator.deviceMemory||8)<=3){document.documentElement.classList.add('lite');return}
 const SEL='.cd,.box,.lr,.em,.ct,.cm,.dt>*,h2,h3,.fb>*,.r1';
 const io=new IntersectionObserver(es=>{let n=0;es.forEach(e=>{if(e.isIntersecting){const t=e.target;t.style.setProperty('--d',Math.min(n++,8)*.05+'s');t.classList.add('in');io.unobserve(t)}})},{threshold:.08,rootMargin:'0px 0px -6% 0px'});
 const seen=new WeakSet();
