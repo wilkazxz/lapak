@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function me() { return request.auth.uid; }
+    function isSigned() { return request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous'; }
+    function isAdmin() { return request.auth != null && exists(/databases/$(db)/documents/admins/$(me())); }
+    function isActive() {
+      return isSigned() && !(exists(/databases/$(db)/documents/users/$(me())) &&
+        get(/databases/$(db)/documents/users/$(me())).data.get('disabled', false));
+    }
+    // id dokumen berakhiran _uid milik sendiri (likes, views)
+    function mine(id) { return request.auth != null && id.matches('.*_' + me()); }
+
+    match /admins/{uid} { allow read: if request.auth != null && me() == uid; }
+
+    match /users/{uid} {
+      allow read: if true;
+      allow create: if isSigned() && me() == uid && !('disabled' in request.resource.data) && !('verified' in request.resource.data);
+      allow update: if (isSigned() && me() == uid &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['disabled', 'verified'])) || isAdmin();
+      allow delete: if isAdmin() || (isSigned() && me() == uid);
+    }
+
+    match /listings/{id} {
+      allow read: if true;
+      allow create: if isActive() && request.resource.data.sellerId == me()
+        && request.resource.data.views == 0 && request.resource.data.likes == 0 && request.resource.data.commentsCount == 0;
+      allow update: if isAdmin()
+        || (isSigned() && resource.data.sellerId == me() && request.resource.data.sellerId == me())
+        || (request.auth != null
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views', 'likes', 'commentsCount'])
+            && (request.resource.data.views - resource.data.views) in [0, 1]
+            && (request.resource.data.likes - resource.data.likes) in [-1, 0, 1]
+            && (request.resource.data.commentsCount - resource.data.commentsCount) in [-1, 0, 1]);
+      allow delete: if isAdmin() || (isSigned() && resource.data.sellerId == me());
+    }
+
+    match /favorites/{id} {
+      allow read, delete: if isSigned() && resource.data.uid == me();
+      allow create: if isSigned() && request.resource.data.uid == me();
+    }
+    match /likes/{id} {
+      allow read, delete: if mine(id);
+      allow create: if mine(id) && request.resource.data.uid == me();
+    }
+    match /views/{id} {
+      allow read: if mine(id);
+      allow create, update: if mine(id) && request.resource.data.viewer == me();
+    }
+
+    match /comments/{id} {
+      allow read: if true;
+      allow create: if isActive() && request.resource.data.uid == me();
+      allow delete: if isAdmin() || (isSigned() && resource.data.uid == me());
+    }
+
+    match /reports/{id} {
+      allow create: if isActive() && request.resource.data.by == me() && request.resource.data.status == 'open';
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /conversations/{cid} {
+      allow read: if isSigned() && me() in resource.data.members;
+      allow create: if isActive() && me() in request.resource.data.members && request.resource.data.members.size() == 2;
+      allow update: if isSigned() && me() in resource.data.members;
+      match /messages/{m} {
+        function conv() { return get(/databases/$(db)/documents/conversations/$(cid)).data; }
+        allow read: if isSigned() && me() in conv().members;
+        allow create: if isActive() && me() in conv().members && request.resource.data.from == me() && conv().blocked.size() == 0;
+      }
+    }
+
+    match /banners/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /settings/{id} { allow read: if true; allow write: if isAdmin(); }
+
+    match /auditLogs/{id} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() && request.resource.data.admin == me();
+    }
+  }
+}
