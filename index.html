@@ -222,6 +222,21 @@ header.sc .nav{height:64px}.nav{transition:none}
 .hero .hc{will-change:auto}
 html.lite .rv{opacity:1;transform:none}html.lite *{animation-duration:.01s!important;transition-duration:.01s!important}
 </style>
+<style id="ui-fix">
+:root{--ink:#0f172a;--mut:#516058}
+body{color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+.grid{grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;align-items:stretch}
+@media(max-width:599px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+.cd{display:flex!important;flex-direction:column;height:100%;background:#fff;border:1px solid #dfeee5;border-radius:16px;color:var(--ink)}
+.cd .im{aspect-ratio:1/1;flex:none}
+.cd .cb{display:flex;flex-direction:column;flex:1;padding:10px 11px 11px;gap:3px;min-width:0}
+.cd .pr{font-size:15px;font-weight:800;color:#047857;letter-spacing:-.2px;line-height:1.25}
+.cd .tt{font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.35;min-height:2.7em;margin:0}
+.cd .mt{font-size:11.5px;color:var(--mut);display:flex;align-items:center;gap:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cd .m2{margin-top:auto;padding-top:7px;border-top:1px solid #edf5f0;gap:10px}
+.cd .m2 span{display:inline-flex;align-items:center;gap:3px}
+.cd .bd{background:#064e3b;font-size:10.5px;padding:2px 8px}
+</style>
 </head>
 <body>
 <div id="splash" role="img" aria-label="Lapak.id"></div>
@@ -634,13 +649,15 @@ addEventListener('hashchange',()=>{if(uid)R()});
 setTimeout(()=>hideSp(),6000);
 
 /* ===== TELEPON SUARA (WebRTC + Firestore signaling) ===== */
-const ICE={iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]}; // tambahkan server TURN di sini bila perlu
+const ICE={iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]}; // TURN publik gratis; ganti dengan TURN milik sendiri untuk produksi
 let CL=null,callUnsub=null,ringT=null,ringCtx=null,tmrI=null;
-document.head.insertAdjacentHTML('beforeend','<style>#callov{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:linear-gradient(160deg,#064e3b,#022c22);color:#fff;animation:fade .3s}.cav{width:104px;height:104px;border-radius:50%;background:linear-gradient(135deg,#34d399,#059669);display:grid;place-items:center;font-size:44px;font-weight:800;animation:cring 1.8s infinite}@keyframes cring{0%{box-shadow:0 0 0 0 #34d39980}70%,100%{box-shadow:0 0 0 28px #34d39900}}#callov b{font-size:22px}#callov .mt{color:#a7e3c8}.crow{display:flex;gap:28px;margin-top:36px}.cb{width:68px;height:68px;border-radius:50%;border:0;color:#fff;font:700 13px inherit;display:grid;place-items:center;cursor:pointer;transition:transform .15s}.cb:active{transform:scale(.9)}.cb.ok{background:#12b76a}.cb.rj{background:#e11d48}.cb.rj svg{transform:rotate(135deg)}.cb.mu{background:#ffffff26}</style>');
-function ring(on){clearInterval(ringT);ringT=null;if(!on)return;const b=()=>{try{ringCtx=ringCtx||new AudioContext();const o=ringCtx.createOscillator(),g=ringCtx.createGain();o.frequency.value=440;g.gain.value=.08;o.connect(g);g.connect(ringCtx.destination);o.start();o.stop(ringCtx.currentTime+.6);navigator.vibrate&&navigator.vibrate(400)}catch(e){}};b();ringT=setInterval(b,1800)}
+document.head.insertAdjacentHTML('beforeend','<style>#callov{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 22px) 20px calc(env(safe-area-inset-bottom,0px) + 34px);background:linear-gradient(180deg,#0b3d2e,#06231b 55%,#041a14);color:#fff;animation:fade .3s}.wtop{font-size:12.5px;color:#a7e3c8;display:flex;gap:6px;align-items:center}.wmid{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}.wav{width:128px;height:128px;border-radius:50%;background:linear-gradient(135deg,#34d399,#059669);display:grid;place-items:center;font-size:54px;font-weight:800;margin-bottom:14px;animation:cring 1.8s infinite}.wmid b{font-size:28px;font-weight:700}#cst{font-size:16px;color:#bfe9d6;font-variant-numeric:tabular-nums}.wbot{display:flex;gap:56px;justify-content:center;width:100%}.wb{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:13px;color:#d1fae5}.wbar{display:flex;gap:26px;padding:14px 22px;border-radius:40px;background:#1f2c34cc}.wbt{width:68px;height:68px;border-radius:50%;border:0;color:#fff;display:grid;place-items:center;cursor:pointer;transition:transform .15s,background .2s}.wbt:active{transform:scale(.9)}.wbt.ok{background:#25d366;animation:cring 1.6s infinite}.wbt.rj{background:#f43f5e}.wbt.rj svg{transform:rotate(135deg)}.wbt.mu{background:#2a3942}.wbt.mu.off{background:#fff;color:#0b141a}.wbt .sl{opacity:0}.wbt.off .sl{opacity:1}@keyframes cring{0%{box-shadow:0 0 0 0 #34d39980}70%,100%{box-shadow:0 0 0 26px #34d39900}}</style>');
+function ring(on,m){clearInterval(ringT);ringT=null;if(!on)return;const b=()=>{try{ringCtx=ringCtx||new AudioContext();ringCtx.resume&&ringCtx.resume();const t=ringCtx.currentTime,f=m==='in'?[480,620]:[425];f.forEach((hz,i)=>{const o=ringCtx.createOscillator(),g=ringCtx.createGain(),k=t+i*.25;o.frequency.value=hz;g.gain.setValueAtTime(.0001,k);g.gain.exponentialRampToValueAtTime(.12,k+.03);g.gain.exponentialRampToValueAtTime(.0001,k+.5);o.connect(g);g.connect(ringCtx.destination);o.start(k);o.stop(k+.55)});m==='in'&&navigator.vibrate&&navigator.vibrate([300,150,300])}catch(e){}};b();ringT=setInterval(b,m==='in'?2200:3000)}
+addEventListener('pointerdown',()=>{try{ringCtx=ringCtx||new AudioContext();ringCtx.resume()}catch(e){}},{passive:true});
+const SV=(p,z=26)=>`<svg viewBox="0 0 24 24" width="${z}" height="${z}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`,MIC='<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/><path class="sl" d="M3 3l18 18"/>';
 function cui(st,name){let o=document.getElementById('callov');if(!o){o=document.createElement('div');o.id='callov';document.body.appendChild(o)}
- const L={calling:'Memanggil…',incoming:'Panggilan masuk',conn:'Menyambungkan…',active:'00:00'}[st];
- o.innerHTML=`<div class="cav">${esc((name||'?')[0].toUpperCase())}</div><b>${esc(name)}</b><div class="mt" id="cst">${L}</div><div class="crow">${st==='incoming'?`<button class="cb rj" onclick="callNo()">${ic('phone',26)}</button><button class="cb ok" onclick="callYes()">${ic('phone',26)}</button>`:`<button class="cb mu" onclick="callMute(this)">Mute</button><button class="cb rj" onclick="callEnd()">${ic('phone',26)}</button>`}</div>`}
+ const L={calling:'Memanggil…',incoming:'Panggilan suara masuk',conn:'Menyambungkan…',active:'00:00'}[st];
+ o.innerHTML=`<div class="wtop">${SV('<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',13)} Panggilan suara Lapak.id</div><div class="wmid"><div class="wav">${esc((name||'?')[0].toUpperCase())}</div><b>${esc(name)}</b><div id="cst">${L}</div></div><div class="wbot">${st==='incoming'?`<div class="wb"><button class="wbt rj" onclick="callNo()" aria-label="Tolak">${ic('phone',28)}</button><span>Tolak</span></div><div class="wb"><button class="wbt ok" onclick="callYes()" aria-label="Jawab">${ic('phone',28)}</button><span>Jawab</span></div>`:`<div class="wbar"><button class="wbt mu" onclick="callMute(this)" aria-label="Bisukan">${SV(MIC,24)}</button><button class="wbt rj" onclick="callEnd()" aria-label="Akhiri">${ic('phone',28)}</button></div>`}</div>`}
 function cActive(){if(!CL||CL.t0)return;ring(false);CL.t0=Date.now();cui('active',CL.name);tmrI=setInterval(()=>{const s=Math.floor((Date.now()-CL.t0)/1000),e=document.getElementById('cst');e&&(e.textContent=String(s/60|0).padStart(2,'0')+':'+String(s%60).padStart(2,'0'))},1000)}
 function cEnd(m){if(!CL)return;const c=CL;CL=null;ring(false);clearTimeout(c.to);clearInterval(tmrI);c.un.forEach(u=>u());try{c.st&&c.st.getTracks().forEach(t=>t.stop());c.pc&&c.pc.close()}catch(e){}document.getElementById('callov')?.remove();document.getElementById('rau')?.remove();m&&toast(m)}
 async function mkPC(id,side){const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});CL.st=st;const pc=new RTCPeerConnection(ICE);CL.pc=pc;st.getTracks().forEach(t=>pc.addTrack(t,st));
@@ -651,12 +668,12 @@ async function mkPC(id,side){const st=await navigator.mediaDevices.getUserMedia(
  CL.flush=()=>{ready=true;q.splice(0).forEach(c=>addDoc(col,c).catch(()=>{}))};
  CL.drain=()=>pend.splice(0).forEach(c=>pc.addIceCandidate(c).catch(()=>{}));
  CL.un.push(onSnapshot(collection(db,'calls',id,side==='caller'?'callee':'caller'),s=>s.docChanges().forEach(ch=>{if(ch.type!=='added')return;const c=ch.doc.data();pc.remoteDescription?pc.addIceCandidate(c).catch(()=>{}):pend.push(c)}),()=>{}));
- pc.onconnectionstatechange=()=>{if(pc.connectionState==='connected')cActive();if(pc.connectionState==='failed'){toast('Koneksi gagal');callEnd()}};
+ pc.onconnectionstatechange=()=>{const k=pc.connectionState;CL&&clearTimeout(CL.dc);if(k==='connected')cActive();if(k==='failed'){toast('Koneksi gagal');callEnd()}if(k==='disconnected'&&CL)CL.dc=setTimeout(()=>{if(CL&&CL.pc===pc&&pc.connectionState!=='connected'){toast('Koneksi terputus');callEnd()}},8000)};
  return pc}
 async function startCall(cid){if(LOCAL)return toast('Telepon butuh Firebase aktif');if(!me)return toast('Masuk dulu untuk menelepon');if(CL)return toast('Sedang dalam panggilan');
  if(!navigator.mediaDevices||!window.RTCPeerConnection)return toast('Browser belum mendukung telepon');if(cur.blocked?.length)return toast('Percakapan diblokir');
  const o=cur.members.find(x=>x!==uid),nm=cur.names?.[o]||'Pengguna',id=doc(collection(db,'calls')).id;
- CL={id,role:'caller',un:[],name:nm};cui('calling',nm);ring(true);
+ CL={id,role:'caller',un:[],name:nm};cui('calling',nm);ring(true,'out');
  try{const pc=await mkPC(id,'caller'),ref=doc(db,'calls',id),of=await pc.createOffer();await pc.setLocalDescription(of);
   await setDoc(ref,{from:uid,to:o,convId:cid,fromName:prof?.name||'Pengguna',status:'ringing',offer:{type:of.type,sdp:of.sdp},ts:Date.now(),at:serverTimestamp()});CL.flush();
   CL.un.push(onSnapshot(ref,async s=>{const d=s.data();if(!d||!CL||CL.id!==id)return;if(d.answer&&!pc.remoteDescription){ring(false);cui('conn',nm);await pc.setRemoteDescription(d.answer);CL.drain()}if(['ended','rejected','missed'].includes(d.status))cEnd(d.status==='rejected'?'Panggilan ditolak':'Panggilan berakhir')},()=>{}));
@@ -670,11 +687,11 @@ async function callYes(){if(!CL||!CL.incoming)return;const id=CL.incoming,nm=CL.
  }catch(e){cEnd(e&&e.name==='NotAllowedError'?'Izin mikrofon ditolak':'Panggilan sudah berakhir')}}
 function callNo(){if(!CL)return;updateDoc(doc(db,'calls',CL.incoming),{status:'rejected'}).catch(()=>{});cEnd()}
 function callEnd(){if(!CL)return;const id=CL.id||CL.incoming;id&&updateDoc(doc(db,'calls',id),{status:'ended'}).catch(()=>{});cEnd('Panggilan berakhir')}
-function callMute(b){const t=CL&&CL.st&&CL.st.getAudioTracks()[0];if(t){t.enabled=!t.enabled;b.textContent=t.enabled?'Mute':'Bisukan'}}
+function callMute(b){const t=CL&&CL.st&&CL.st.getAudioTracks()[0];if(t){t.enabled=!t.enabled;b.classList.toggle('off',!t.enabled)}}
 function callWatch(){callUnsub&&callUnsub();callUnsub=null;if(LOCAL||!me)return;
  callUnsub=onSnapshot(query(collection(db,'calls'),where('to','==',uid),where('status','==','ringing')),s=>s.docChanges().forEach(ch=>{const d=ch.doc.data(),id=ch.doc.id;
   if(ch.type==='added'){if(Date.now()-(d.ts||0)>40000)return;if(CL){updateDoc(ch.doc.ref,{status:'rejected'}).catch(()=>{});return}
-   CL={incoming:id,name:d.fromName||'Pengguna',un:[]};cui('incoming',CL.name);ring(true);CL.to=setTimeout(()=>{if(CL&&CL.incoming===id&&!CL.accepted)cEnd('Panggilan terlewat')},45000)}
+   CL={incoming:id,name:d.fromName||'Pengguna',un:[]};cui('incoming',CL.name);ring(true,'in');CL.to=setTimeout(()=>{if(CL&&CL.incoming===id&&!CL.accepted)cEnd('Panggilan terlewat')},45000)}
   else if(ch.type==='removed'&&CL&&CL.incoming===id&&!CL.accepted)cEnd('Panggilan dibatalkan')}),()=>{})}
 
 Object.assign(window,{startCall,callYes,callNo,callEnd,callMute,more,delAcc,avDel,modal,authUI,doAuth,logout,setF,catBar,home,fav,like,postC,delC,report,share,saveL,addImgs,rmImg,saveP,avPick,setSt,ext,delL,startChat,send,blockC});
