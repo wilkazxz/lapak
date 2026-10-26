@@ -63,6 +63,7 @@ function localFB(){
   try{LS=window.localStorage;const x=JSON.parse(LS.getItem('lapak_db')||'null');if(x){S=rev(x.S);AC=x.AC;cu=AC.cur}}catch{}
   const save=()=>{try{LS&&LS.setItem('lapak_db',JSON.stringify({S,AC}))}catch{}};
   const col=c=>S[c]||(S[c]={}),LI=[],AL=[];
+  try{addEventListener('storage',e=>{if(e.key==='lapak_db'&&e.newValue){S=rev(JSON.parse(e.newValue).S);LI.forEach(l=>setTimeout(l.f,0))}})}catch{}
   const fire=c=>{save();LI.filter(l=>l.c===c).forEach(l=>setTimeout(l.f,0))};
   const val=v=>v instanceof TS?v.m:v;
   const getp=(o,k)=>k.split('.').reduce((a,b)=>a?.[b],o);
@@ -127,7 +128,7 @@ const guard=async f=>{try{return await f()}catch(e){console.error(e);toast(e.cod
 const comp=(f,m,q,t)=>new Promise((ok,no)=>{if(!f||!/^image\//.test(f.type)||f.size>8e6)return no(Error('Pilih gambar maks 8 MB'));const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const k=Math.min(1,m/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);ok(c.toDataURL(t,q))};i.onerror=()=>no(Error('Gambar rusak'));i.src=r.result};r.readAsDataURL(f)});
 const Q=(c,...q)=>getDocs(query(collection(db,c),...q)).then(s=>s.docs.map(d=>({id:d.id,...d.data()})));
 const T={dash:['Ringkasan','grid'],rep:['Laporan','flag'],lst:['Iklan','bag'],usr:['Pengguna','user'],cmt:['Komentar','chat'],ban:['Banner','image'],log:['Audit log','clock']};
-let tab='dash',me=null;
+let tab='dash',me=null,SQ='',ul=[],iv,wt;
 
 const log=(action,target,note='')=>addDoc(collection(db,'auditLogs'),{admin:me.uid,email:me.email,action,target,note,at:serverTimestamp()});
 const row=(img,t,sub,btns='')=>`<div class="box r1">${img?`<img src="${esc(img)}" alt="">`:''}<div>${t}<div class="mt">${sub}</div><div class="bt">${btns}</div></div></div>`;
@@ -149,9 +150,9 @@ else onAuthStateChanged(auth,async u=>{
 });
 
 /* ===== TAMPILAN TIAP TAB ===== */
-async function view(){
+async function view(q){
   $('#tabs').innerHTML=Object.entries(T).map(([k,[v,i]])=>`<button class="chip ${k===tab?'on':''}" onclick="go('${k}')">${ic(i,16)} ${v}</button>`).join('');
-  const m=$('#main');m.innerHTML=none('Memuat…');
+  const m=$('#main');if(!q){m.innerHTML=none('Memuat…');watch()}
   await guard(async()=>{
     if(tab==='dash'){
       const c=q=>getCountFromServer(q).then(s=>s.data().count);
@@ -173,10 +174,16 @@ async function view(){
     if(tab==='log'){const a=await Q('auditLogs',orderBy('at','desc'),limit(50));
       m.innerHTML=a.map(l=>row('',`<b>${esc(l.action)}</b> → ${esc(l.target)}`,`${dt(l.at)} · ${esc(l.email)}${l.note?' · '+esc(l.note):''}`)).join('')||none('Belum ada aktivitas')}
   });
+  if(SQ)fq(SQ);
 }
-const go=k=>{tab=k;view()};
-const fq=v=>{v=v.toLowerCase();document.querySelectorAll('#main .r1').forEach(e=>e.style.display=e.textContent.toLowerCase().includes(v)?'':'none')};
-const srch=()=>`<input class="srch" style="grid-column:1/-1" placeholder="Cari nama, kota, atau ID…" oninput="fq(this.value)" aria-label="Cari">`;
+const go=k=>{tab=k;SQ='';view()};
+/* ===== REALTIME: panel ikut berubah otomatis ===== */
+function watch(){ul.forEach(f=>f());ul=[];clearInterval(iv);if(!me)return;
+  if(tab==='dash'){iv=setInterval(()=>{if(!document.hidden)view(1)},10000);return}
+  const C=n=>collection(db,n),W={rep:[query(C('reports'),where('status','==','open'))],lst:[query(C('listings'),orderBy('createdAt','desc'),limit(200))],usr:[query(C('users'),limit(200))],cmt:[query(C('comments'),orderBy('at','desc'),limit(50))],ban:[C('banners'),doc(db,'settings','logo'),doc(db,'settings','notice')],log:[query(C('auditLogs'),orderBy('at','desc'),limit(50))]};
+  (W[tab]||[]).forEach(q=>{let f=1;ul.push(onSnapshot(q,()=>{if(f){f=0;return}clearTimeout(wt);wt=setTimeout(()=>{const e=document.activeElement;if(e&&/INPUT|TEXTAREA/.test(e.tagName)&&e.type!=='file'&&e.value)return;view(1)},300)},()=>{}))})}
+const fq=v=>{SQ=v;v=v.toLowerCase();document.querySelectorAll('#main .r1').forEach(e=>e.style.display=e.textContent.toLowerCase().includes(v)?'':'none')};
+const srch=()=>`<input class="srch" value="${esc(SQ)}" style="grid-column:1/-1" placeholder="Cari nama, kota, atau ID…" oninput="fq(this.value)" aria-label="Cari">`;
 
 /* ===== AKSI MODERASI (semuanya tercatat di auditLogs) ===== */
 const done=async(a,t,n)=>{await log(a,t,n);toast('Tindakan dicatat');view()};
