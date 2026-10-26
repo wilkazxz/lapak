@@ -83,6 +83,22 @@ service cloud.firestore {
       match /callee/{c} { allow read: if isSigned() && me() == cd().from; allow create: if isSigned() && me() == cd().to; }
     }
 
+    match /orders/{id} {
+      function od() { return get(/databases/$(db)/documents/orders/$(id)).data; }
+      allow read: if isSigned() && (me() == resource.data.sellerId || me() == resource.data.buyerId);
+      allow create: if isActive() && request.resource.data.buyerId == me() && request.resource.data.sellerId != me() && request.resource.data.status == 'pending';
+      allow update: if isSigned() && (
+        (me() == resource.data.sellerId && resource.data.status == 'pending' && request.resource.data.status == 'done'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','proof','doneAt'])
+          && request.resource.data.proof == get(/databases/$(db)/documents/orders/$(id)/secret/code).data.c)
+        || (me() == resource.data.buyerId && resource.data.status == 'done' && !('rating' in resource.data)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rating','review'])
+          && request.resource.data.rating in [1,2,3,4,5]));
+      match /secret/{d} {
+        allow read, create: if isSigned() && me() == od().buyerId;
+      }
+    }
+
     match /banners/{id} { allow read: if true; allow write: if isAdmin(); }
     match /settings/{id} { allow read: if true; allow write: if isAdmin(); }
 
