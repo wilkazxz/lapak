@@ -382,7 +382,7 @@ addEventListener('hashchange',()=>{fr();pg()});document.addEventListener('pointe
 #sc{position:fixed;inset:0;background:#0b2a4a55;z-index:55}#sc[hidden]{display:none}
 </style>
 <script>
-(function(){const h=document.querySelector('header'),b=document.createElement('button');b.id='hb';b.textContent='☰';b.setAttribute('aria-label','Menu');h.prepend(b);
+(function(){const h=document.querySelector('header'),b=document.createElement('button');b.id='hb';b.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';b.setAttribute('aria-label','Menu');h.prepend(b);
 const sc=document.createElement('div');sc.id='sc';sc.hidden=true;document.body.appendChild(sc);
 const set=o=>{const t=document.getElementById('tabs');if(t)t.classList.toggle('open',o);sc.hidden=!o};
 b.onclick=()=>set(!document.getElementById('tabs')?.classList.contains('open'));sc.onclick=()=>set(false);
