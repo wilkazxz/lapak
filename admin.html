@@ -16,7 +16,7 @@ body{font:14px/1.5 'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg)
 a{color:var(--g)}button,input,select,textarea{font:inherit}
 .ic{flex:none;vertical-align:-3px}
 header{background:linear-gradient(120deg,var(--g),var(--gd));color:#fff;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));display:flex;align-items:center;gap:10px;border-radius:0 0 22px 22px;box-shadow:0 8px 24px #16286a33}
-header img{width:34px;height:34px;border-radius:10px;background:#fff}header b{flex:1;font-size:16px}
+header img{height:34px;max-width:120px;object-fit:contain}header b{flex:1;font-size:16px}
 .w{max-width:1100px;margin:auto;padding:16px}
 input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--ln);border-radius:12px;background:#fff}
 input:focus-visible,button:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}
@@ -28,7 +28,7 @@ input:focus-visible,button:focus-visible{outline:2px solid #fbbf24;outline-offse
 #main{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px}
 #main .box{margin:0}#main>.st,#main>.fm,#main>.none{grid-column:1/-1}
 .st{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.mt{font-size:12px;color:var(--mut)}.r1{display:flex;gap:10px;align-items:center}.r1>div{flex:1;min-width:0}.r1 img{width:52px;height:52px;border-radius:12px;object-fit:cover}
+.mt{font-size:12px;color:var(--mut)}.r1{display:flex;gap:10px;align-items:center}.r1>div{flex:1;min-width:0}.r1 img{width:52px;height:52px;border-radius:12px;object-fit:contain;background:#eef2fb}
 .bt{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .tag{display:inline-block;background:#e8efff;color:var(--gd);font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px}.tag.x{background:#ffe4e6;color:#9f1239}
 .fm{display:grid;gap:8px;max-width:380px;margin:60px auto}
@@ -47,7 +47,7 @@ input:focus-visible,button:focus-visible{outline:2px solid #fbbf24;outline-offse
    Tahap sekarang: Firebase BELUM terhubung -> MODE DEMO (localStorage, hanya untuk uji coba).
    Nanti: isi objek FB dengan config project Firebase. Mode demo mati otomatis,
    sisa kode tidak perlu diubah (API demo meniru Firebase v10 modular). */
-const FB={apiKey:"ISI_API_KEY",authDomain:"PROJECT.firebaseapp.com",projectId:"PROJECT",storageBucket:"PROJECT.appspot.com",messagingSenderId:"ISI",appId:"ISI"};
+const FB={apiKey:"AIzaSyBmmIbblvqjGo6xG_oG_AyiI8h1vqGS-i4",authDomain:"lapakid.firebaseapp.com",projectId:"lapakid",storageBucket:"lapakid.firebasestorage.app",messagingSenderId:"1077330772311",appId:"1:1077330772311:web:6fe52f5b48e08c8d103e12"};
 const LOCAL=FB.apiKey==="ISI_API_KEY";
 
 const GS="https://www.gstatic.com/firebasejs/10.12.2/firebase-";
