@@ -156,14 +156,17 @@ async function view(q){
   await guard(async()=>{
     if(tab==='dash'){
       const c=q=>getCountFromServer(q).then(s=>s.data().count);
-      const [u,l,k,r,a]=await Promise.all([c(collection(db,'users')),c(collection(db,'listings')),c(collection(db,'comments')),c(query(collection(db,'reports'),where('status','==','open'))),c(query(collection(db,'listings'),where('status','==','active')))]);
-      m.innerHTML=`<div class="st">${[['Pengguna',u],['Iklan total',l],['Iklan aktif',a],['Komentar',k],['Laporan terbuka',r]].map(([x,y])=>`<div class="box"><div class="mt">${x}</div><b style="font-size:28px">${y}</b></div>`).join('')}</div>`}
+      const [u,l,k,r,a,ls]=await Promise.all([c(collection(db,'users')),c(collection(db,'listings')),c(collection(db,'comments')),c(query(collection(db,'reports'),where('status','==','open'))),c(query(collection(db,'listings'),where('status','==','active'))),Q('listings',orderBy('createdAt','desc'),limit(200))]);
+      const ms=x=>x?.toMillis?.()||0,D=864e5,t0=new Date().setHours(0,0,0,0),cat={},day=Array(7).fill(0);ls.forEach(x=>{cat[x.cat||'Lainnya']=(cat[x.cat||'Lainnya']||0)+1;const d=Math.floor((t0-ms(x.createdAt))/D);if(d>=-0&&d<7)day[6-d]++;else if(d<0)day[6]++});
+      const bars=(t,rows)=>{const mx=Math.max(1,...rows.map(r=>r[1]));return `<div class="box"><b>${t}</b>${rows.map(([k,v])=>`<div class="mt" style="display:flex;gap:8px;align-items:center;margin-top:7px"><span style="width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(k)}</span><i style="height:10px;border-radius:6px;background:var(--g);width:${Math.max(3,v/mx*100)}%;max-width:55%"></i><b>${v}</b></div>`).join('')||'<div class="mt">Belum ada data</div>'}</div>`};
+      const dn=Array.from({length:7},(_,i)=>new Date(t0-(6-i)*D).toLocaleDateString('id-ID',{weekday:'short'}));
+      m.innerHTML=`<div class="st">${[['Pengguna',u],['Iklan total',l],['Iklan aktif',a],['Komentar',k],['Laporan terbuka',r]].map(([x,y])=>`<div class="box"><div class="mt">${x}</div><b style="font-size:28px">${y}</b></div>`).join('')}</div><div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-top:10px">${bars('Iklan per kategori',Object.entries(cat).sort((x,y)=>y[1]-x[1]))}${bars('Iklan baru 7 hari terakhir',dn.map((n,i)=>[n,day[i]]))}${bars('Iklan terpopuler (views)',[...ls].sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,5).map(x=>[x.title,x.views||0]))}</div>`}
     if(tab==='rep'){const a=(await Q('reports',where('status','==','open'))).sort((x,y)=>(y.at?.toMillis?.()||0)-(x.at?.toMillis?.()||0));
       m.innerHTML=a.map(r=>row('',`<span class="tag x">${esc(r.type)}</span> ${esc(r.reason)}`,`${dt(r.at)} · target: ${esc(r.target)}${r.listingId?` · <a target="_blank" href="index.html#/iklan/${esc(r.listingId)}">lihat iklan</a>`:''}`,bt('Tindak','act(\''+r.id+'\')','r')+bt('Abaikan','dismiss(\''+r.id+'\')')+bt('Hapus','repDel(\''+r.id+'\')','r'))).join('')||none(ic('shield',28)+'<br>Tidak ada laporan terbuka')}
     if(tab==='lst'){const a=await Q('listings',orderBy('createdAt','desc'),limit(200));
       m.innerHTML=srch()+a.map(l=>row(l.images?.[0],`<b>${esc(l.title)}</b>`,`${rp(l.price)} · ${esc(l.sellerName)} · ${esc(l.city)} · <span class="tag">${esc(l.status)}</span> · ${ic('eye',13)} ${l.views||0}`,`<a class="btn o s" style="text-decoration:none;color:inherit" target="_blank" href="index.html#/iklan/${l.id}">Buka</a>`+(l.status==='hidden'?bt('Aktifkan',`lstSt('${l.id}','active')`):bt('Sembunyikan',`lstSt('${l.id}','hidden')`))+bt('Hapus',`lstDel('${l.id}')`,'r'))).join('')||none('Belum ada iklan')}
     if(tab==='usr'){const a=await Q('users',limit(200));
-      m.innerHTML=srch()+a.map(u=>row(u.avatar,`<b>${esc(u.name)}</b> ${u.disabled?'<span class="tag x">nonaktif</span>':''}`,`${esc(u.city||'-')} · bergabung ${dt(u.joined)} · ${u.id.slice(0,8)}…`,`<a class="btn o s" style="text-decoration:none;color:inherit" target="_blank" href="index.html#/penjual/${u.id}">Profil</a>`+bt(u.disabled?'Aktifkan':'Nonaktifkan',`usrSt('${u.id}',${!u.disabled})`,u.disabled?'o':'r')+bt('Hapus data',`usrDel('${u.id}')`,'r'))).join('')||none('Belum ada pengguna')}
+      m.innerHTML=srch()+a.map(u=>row(u.avatar,`<b>${esc(u.name)}</b> ${u.disabled?'<span class="tag x">nonaktif</span>':''} ${u.verified?'<span class="tag">terverifikasi</span>':''}`,`${esc(u.city||'-')} · bergabung ${dt(u.joined)} · ${u.id.slice(0,8)}…`,`<a class="btn o s" style="text-decoration:none;color:inherit" target="_blank" href="index.html#/penjual/${u.id}">Profil</a>`+bt(u.disabled?'Aktifkan':'Nonaktifkan',`usrSt('${u.id}',${!u.disabled})`,u.disabled?'o':'r')+bt(u.verified?'Cabut centang':'Verifikasi',`usrVer('${u.id}',${!u.verified})`)+bt('Hapus data',`usrDel('${u.id}')`,'r'))).join('')||none('Belum ada pengguna')}
     if(tab==='cmt'){const a=await Q('comments',orderBy('at','desc'),limit(50));
       m.innerHTML=a.map(c=>row(c.avatar,`<b>${esc(c.name)}</b>: ${esc(c.text)}`,`${dt(c.at)} · <a target="_blank" href="index.html#/iklan/${esc(c.listingId)}">iklan</a>`,bt('Hapus',`cmtDel('${c.id}','${esc(c.listingId)}')`,'r'))).join('')||none('Belum ada komentar')}
     if(tab==='ban'){const [a,g]=await Promise.all([Q('banners',orderBy('at','desc')),getDoc(doc(db,'settings','logo'))]),L=g.exists()?g.data().img:'';
@@ -191,6 +194,7 @@ const lstSt=(id,s)=>guard(async()=>{await updateDoc(doc(db,'listings',id),{statu
 const lstDel=id=>confirm('Hapus iklan permanen?')&&guard(async()=>{await deleteDoc(doc(db,'listings',id));await done('listing.delete',id)});
 const usrSt=(id,d)=>guard(async()=>{await updateDoc(doc(db,'users',id),{disabled:d});await done(d?'user.disable':'user.enable',id)});
 const cmtDel=(id,lid)=>confirm('Hapus komentar ini?')&&guard(async()=>{await deleteDoc(doc(db,'comments',id));await done('comment.delete',id,'iklan '+lid)});
+const usrVer=(id,v)=>guard(async()=>{await updateDoc(doc(db,'users',id),{verified:v});await done(v?'user.verify':'user.unverify',id)});
 const repDel=id=>confirm('Hapus laporan ini?')&&guard(async()=>{await deleteDoc(doc(db,'reports',id));await done('report.delete',id)});
 const usrDel=id=>confirm('Hapus profil pengguna beserta semua iklannya? Akun login tetap ada (hapus lewat Firebase Authentication).')&&guard(async()=>{for(const l of await Q('listings',where('sellerId','==',id)))await deleteDoc(doc(db,'listings',l.id));await deleteDoc(doc(db,'users',id));await done('user.delete',id)});
 const dismiss=id=>guard(async()=>{await updateDoc(doc(db,'reports',id),{status:'dismissed',by:me.uid});await done('report.dismiss',id)});
@@ -205,7 +209,7 @@ const upImg=(f,k)=>guard(async()=>{const o=k==='logo',d=await comp(f,o?256:1600,
 const setNt=()=>guard(async()=>{const t=$('#nt').value.trim();if(t)await setDoc(doc(db,'settings','notice'),{text:t,at:serverTimestamp()});else await deleteDoc(doc(db,'settings','notice'));await done('notice.set','notice')});
 const logoDel=()=>guard(async()=>{await deleteDoc(doc(db,'settings','logo'));await done('logo.delete','logo')});
 const banDel=id=>guard(async()=>{await deleteDoc(doc(db,'banners',id));await done('banner.delete',id)});
-Object.assign(window,{login,logout,go,lstSt,lstDel,usrSt,cmtDel,dismiss,repDel,usrDel,fq,setNt,act,upImg,logoDel,banDel});
+Object.assign(window,{login,logout,go,lstSt,lstDel,usrSt,cmtDel,dismiss,usrVer,repDel,usrDel,fq,setNt,act,upImg,logoDel,banDel});
 </script>
 </body>
 </html>
