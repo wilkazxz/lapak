@@ -158,21 +158,25 @@ async function view(){
       const [u,l,k,r,a]=await Promise.all([c(collection(db,'users')),c(collection(db,'listings')),c(collection(db,'comments')),c(query(collection(db,'reports'),where('status','==','open'))),c(query(collection(db,'listings'),where('status','==','active')))]);
       m.innerHTML=`<div class="st">${[['Pengguna',u],['Iklan total',l],['Iklan aktif',a],['Komentar',k],['Laporan terbuka',r]].map(([x,y])=>`<div class="box"><div class="mt">${x}</div><b style="font-size:28px">${y}</b></div>`).join('')}</div>`}
     if(tab==='rep'){const a=(await Q('reports',where('status','==','open'))).sort((x,y)=>(y.at?.toMillis?.()||0)-(x.at?.toMillis?.()||0));
-      m.innerHTML=a.map(r=>row('',`<span class="tag x">${esc(r.type)}</span> ${esc(r.reason)}`,`${dt(r.at)} · target: ${esc(r.target)}${r.listingId?` · <a target="_blank" href="index.html#/iklan/${esc(r.listingId)}">lihat iklan</a>`:''}`,bt('Tindak','act(\''+r.id+'\')','r')+bt('Abaikan','dismiss(\''+r.id+'\')'))).join('')||none(ic('shield',28)+'<br>Tidak ada laporan terbuka')}
-    if(tab==='lst'){const a=await Q('listings',orderBy('createdAt','desc'),limit(50));
-      m.innerHTML=a.map(l=>row(l.images?.[0],`<b>${esc(l.title)}</b>`,`${rp(l.price)} · ${esc(l.sellerName)} · ${esc(l.city)} · <span class="tag">${esc(l.status)}</span> · ${ic('eye',13)} ${l.views||0}`,`<a class="btn o s" style="text-decoration:none;color:inherit" target="_blank" href="index.html#/iklan/${l.id}">Buka</a>`+(l.status==='hidden'?bt('Aktifkan',`lstSt('${l.id}','active')`):bt('Sembunyikan',`lstSt('${l.id}','hidden')`))+bt('Hapus',`lstDel('${l.id}')`,'r'))).join('')||none('Belum ada iklan')}
-    if(tab==='usr'){const a=await Q('users',limit(50));
-      m.innerHTML=a.map(u=>row(u.avatar,`<b>${esc(u.name)}</b> ${u.disabled?'<span class="tag x">nonaktif</span>':''}`,`${esc(u.city||'-')} · bergabung ${dt(u.joined)} · ${u.id.slice(0,8)}…`,`<a class="btn o s" style="text-decoration:none;color:inherit" target="_blank" href="index.html#/penjual/${u.id}">Profil</a>`+bt(u.disabled?'Aktifkan':'Nonaktifkan',`usrSt('${u.id}',${!u.disabled})`,u.disabled?'o':'r'))).join('')||none('Belum ada pengguna')}
+      m.innerHTML=a.map(r=>row('',`<span class="tag x">${esc(r.type)}</span> ${esc(r.reason)}`,`${dt(r.at)} · target: ${esc(r.target)}${r.listingId?` · <a target="_blank" href="index.html#/iklan/${esc(r.listingId)}">lihat iklan</a>`:''}`,bt('Tindak','act(\''+r.id+'\')','r')+bt('Abaikan','dismiss(\''+r.id+'\')')+bt('Hapus','repDel(\''+r.id+'\')','r'))).join('')||none(ic('shield',28)+'<br>Tidak ada laporan terbuka')}
+    if(tab==='lst'){const a=await Q('listings',orderBy('createdAt','desc'),limit(200));
+      m.innerHTML=srch()+a.map(l=>row(l.images?.[0],`<b>${esc(l.title)}</b>`,`${rp(l.price)} · ${esc(l.sellerName)} · ${esc(l.city)} · <span class="tag">${esc(l.status)}</span> · ${ic('eye',13)} ${l.views||0}`,`<a class="btn o s" style="text-decoration:none;color:inherit" target="_blank" href="index.html#/iklan/${l.id}">Buka</a>`+(l.status==='hidden'?bt('Aktifkan',`lstSt('${l.id}','active')`):bt('Sembunyikan',`lstSt('${l.id}','hidden')`))+bt('Hapus',`lstDel('${l.id}')`,'r'))).join('')||none('Belum ada iklan')}
+    if(tab==='usr'){const a=await Q('users',limit(200));
+      m.innerHTML=srch()+a.map(u=>row(u.avatar,`<b>${esc(u.name)}</b> ${u.disabled?'<span class="tag x">nonaktif</span>':''}`,`${esc(u.city||'-')} · bergabung ${dt(u.joined)} · ${u.id.slice(0,8)}…`,`<a class="btn o s" style="text-decoration:none;color:inherit" target="_blank" href="index.html#/penjual/${u.id}">Profil</a>`+bt(u.disabled?'Aktifkan':'Nonaktifkan',`usrSt('${u.id}',${!u.disabled})`,u.disabled?'o':'r')+bt('Hapus data',`usrDel('${u.id}')`,'r'))).join('')||none('Belum ada pengguna')}
     if(tab==='cmt'){const a=await Q('comments',orderBy('at','desc'),limit(50));
       m.innerHTML=a.map(c=>row(c.avatar,`<b>${esc(c.name)}</b>: ${esc(c.text)}`,`${dt(c.at)} · <a target="_blank" href="index.html#/iklan/${esc(c.listingId)}">iklan</a>`,bt('Hapus',`cmtDel('${c.id}','${esc(c.listingId)}')`,'r'))).join('')||none('Belum ada komentar')}
     if(tab==='ban'){const [a,g]=await Promise.all([Q('banners',orderBy('at','desc')),getDoc(doc(db,'settings','logo'))]),L=g.exists()?g.data().img:'';
+      const nt=(await getDoc(doc(db,'settings','notice'))).data()?.text||'';
       const fm=(t,h,k)=>`<div class="box fm" style="margin:0;max-width:none"><b>${t}</b>${h}<input type="file" accept="image/*" onchange="upImg(this.files[0],'${k}')"></div>`;
-      m.innerHTML=fm('Logo aplikasi',`<div class="r1"><img src="${esc(L||'icon.png')}" alt=""><div class="mt">Tampil di header dan favicon situs. Ikon APK/instal mengikuti file icon.png saat dibuild ulang.</div></div>${L?`<div class="bt">${bt('Hapus logo (pakai bawaan)','logoDel()','r')}</div>`:''}`,'logo')+fm('Tambah foto banner','<span class="mt">Format lebar (mis. 3:1), otomatis dikompres. Maks. 5 banner terbaru tampil bergantian di beranda. Untuk mengganti: unggah yang baru lalu hapus yang lama.</span>','banner')+(a.filter(b=>b.img).map(b=>row(b.img,'<b>Banner</b>',dt(b.at),bt('Hapus',`banDel('${b.id}')`,'r'))).join('')||none('Belum ada banner kustom, beranda memakai banner bawaan'))}
+      const nb=`<div class="box fm" style="margin:0;max-width:none"><b>Pengumuman beranda</b><input id="nt" maxlength="160" placeholder="Teks pengumuman (kosongkan lalu simpan untuk menghapus)" value="${esc(nt)}"><div class="bt"><button class="btn s" onclick="setNt()">Simpan</button></div></div>`;
+      m.innerHTML=fm('Logo aplikasi',`<div class="r1"><img src="${esc(L||'icon.png')}" alt=""><div class="mt">Tampil di header dan favicon situs. Ikon APK/instal mengikuti file icon.png saat dibuild ulang.</div></div>${L?`<div class="bt">${bt('Hapus logo (pakai bawaan)','logoDel()','r')}</div>`:''}`,'logo')+fm('Tambah foto banner','<span class="mt">Format lebar (mis. 3:1), otomatis dikompres. Maks. 5 banner terbaru tampil bergantian. Isi tautan dulu (opsional) sebelum memilih foto.</span><input id="bl" maxlength="200" placeholder="Tautan saat banner diklik, mis. #/iklan/ID atau https://…">','banner')+nb+(a.filter(b=>b.img).map(b=>row(b.img,'<b>Banner</b>',dt(b.at)+(b.link?' · '+esc(b.link):''),bt('Hapus',`banDel('${b.id}')`,'r'))).join('')||none('Belum ada banner kustom, beranda memakai banner bawaan'))}
     if(tab==='log'){const a=await Q('auditLogs',orderBy('at','desc'),limit(50));
       m.innerHTML=a.map(l=>row('',`<b>${esc(l.action)}</b> → ${esc(l.target)}`,`${dt(l.at)} · ${esc(l.email)}${l.note?' · '+esc(l.note):''}`)).join('')||none('Belum ada aktivitas')}
   });
 }
 const go=k=>{tab=k;view()};
+const fq=v=>{v=v.toLowerCase();document.querySelectorAll('#main .r1').forEach(e=>e.style.display=e.textContent.toLowerCase().includes(v)?'':'none')};
+const srch=()=>`<input class="srch" style="grid-column:1/-1" placeholder="Cari nama, kota, atau ID…" oninput="fq(this.value)" aria-label="Cari">`;
 
 /* ===== AKSI MODERASI (semuanya tercatat di auditLogs) ===== */
 const done=async(a,t,n)=>{await log(a,t,n);toast('Tindakan dicatat');view()};
@@ -180,6 +184,8 @@ const lstSt=(id,s)=>guard(async()=>{await updateDoc(doc(db,'listings',id),{statu
 const lstDel=id=>confirm('Hapus iklan permanen?')&&guard(async()=>{await deleteDoc(doc(db,'listings',id));await done('listing.delete',id)});
 const usrSt=(id,d)=>guard(async()=>{await updateDoc(doc(db,'users',id),{disabled:d});await done(d?'user.disable':'user.enable',id)});
 const cmtDel=(id,lid)=>confirm('Hapus komentar ini?')&&guard(async()=>{await deleteDoc(doc(db,'comments',id));await done('comment.delete',id,'iklan '+lid)});
+const repDel=id=>confirm('Hapus laporan ini?')&&guard(async()=>{await deleteDoc(doc(db,'reports',id));await done('report.delete',id)});
+const usrDel=id=>confirm('Hapus profil pengguna beserta semua iklannya? Akun login tetap ada (hapus lewat Firebase Authentication).')&&guard(async()=>{for(const l of await Q('listings',where('sellerId','==',id)))await deleteDoc(doc(db,'listings',l.id));await deleteDoc(doc(db,'users',id));await done('user.delete',id)});
 const dismiss=id=>guard(async()=>{await updateDoc(doc(db,'reports',id),{status:'dismissed',by:me.uid});await done('report.dismiss',id)});
 const act=id=>guard(async()=>{
   const r=(await getDoc(doc(db,'reports',id))).data();
@@ -188,10 +194,11 @@ const act=id=>guard(async()=>{
   else if(r.type==='comment')await deleteDoc(doc(db,'comments',r.target));
   else await updateDoc(doc(db,'users',r.target),{disabled:true});
   await updateDoc(doc(db,'reports',id),{status:'resolved',by:me.uid});await done('report.resolve',id,r.type+':'+r.target)});
-const upImg=(f,k)=>guard(async()=>{const o=k==='logo',d=await comp(f,o?256:1600,o?1:.75,o?'image/png':'image/jpeg');if(o)await setDoc(doc(db,'settings','logo'),{img:d,at:serverTimestamp()});else await addDoc(collection(db,'banners'),{img:d,at:serverTimestamp()});await done(o?'logo.set':'banner.add',k)});
+const upImg=(f,k)=>guard(async()=>{const o=k==='logo',d=await comp(f,o?256:1600,o?1:.75,o?'image/png':'image/jpeg');if(o)await setDoc(doc(db,'settings','logo'),{img:d,at:serverTimestamp()});else await addDoc(collection(db,'banners'),{img:d,link:($('#bl')?.value||'').trim(),at:serverTimestamp()});await done(o?'logo.set':'banner.add',k)});
+const setNt=()=>guard(async()=>{const t=$('#nt').value.trim();if(t)await setDoc(doc(db,'settings','notice'),{text:t,at:serverTimestamp()});else await deleteDoc(doc(db,'settings','notice'));await done('notice.set','notice')});
 const logoDel=()=>guard(async()=>{await deleteDoc(doc(db,'settings','logo'));await done('logo.delete','logo')});
 const banDel=id=>guard(async()=>{await deleteDoc(doc(db,'banners',id));await done('banner.delete',id)});
-Object.assign(window,{login,logout,go,lstSt,lstDel,usrSt,cmtDel,dismiss,act,upImg,logoDel,banDel});
+Object.assign(window,{login,logout,go,lstSt,lstDel,usrSt,cmtDel,dismiss,repDel,usrDel,fq,setNt,act,upImg,logoDel,banDel});
 </script>
 </body>
 </html>
